@@ -1,69 +1,99 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import { Brand } from "@/components/brand";
+import { ButtonLink } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  IconBook,
+  IconChart,
+  IconClock,
+  IconShield,
+} from "@/components/ui/icons";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Quorlyn — timed online examinations",
+};
+
+const FEATURES = [
+  {
+    icon: IconBook,
+    title: "Bangla, English, and mathematics",
+    body: "Write a question in both scripts with formulae, chemical equations and units inline — it renders the same for every student.",
+  },
+  {
+    icon: IconClock,
+    title: "The clock belongs to the server",
+    body: "Deadlines are set server-side, answers save as they are given, and a dropped connection submits rather than losing work.",
+  },
+  {
+    icon: IconChart,
+    title: "Results that mean something",
+    body: "Leaderboards pick one attempt per student, and per-question difficulty shows what the class actually found hard.",
+  },
+  {
+    icon: IconShield,
+    title: "One account, one device",
+    body: "Sessions are bound to a device, and moving one takes an emailed code — so sharing an account is visible, not convenient.",
+  },
+];
+
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex min-h-full flex-col">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+        <Brand href="/" />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ButtonLink href="/login" variant="secondary" size="sm">
+            Sign in
+          </ButtonLink>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6">
+        <section className="py-12 sm:py-16">
+          <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+            For schools and classrooms
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <h1 className="text-fg mt-2.5 max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            Timed examinations your students can sit, and your teachers can trust.
+          </h1>
+          <p className="text-fg-muted mt-4 max-w-2xl text-base">
+            Quorlyn runs quizzes across every subject — physics, chemistry,
+            mathematics — in Bangla and English, with a marking and results
+            pipeline that holds up after the exam is over.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <ButtonLink href="/login" size="lg">
+              Sign in
+            </ButtonLink>
+            <ButtonLink href="/join" size="lg" variant="secondary">
+              Join with a code
+            </ButtonLink>
+          </div>
+        </section>
+
+        <section className="grid gap-3.5 pb-16 sm:grid-cols-2">
+          {FEATURES.map(({ icon: Glyph, title, body }) => (
+            <article
+              key={title}
+              className="border-border bg-surface rounded-card border p-4 shadow-sm"
+            >
+              <span className="bg-primary-soft text-primary inline-flex rounded-md p-2">
+                <Glyph />
+              </span>
+              <h2 className="text-fg mt-2.5 text-sm font-semibold">{title}</h2>
+              <p className="text-fg-muted mt-1.5 text-sm leading-relaxed">{body}</p>
+            </article>
+          ))}
+        </section>
       </main>
+
+      <footer className="border-border mx-auto w-full max-w-6xl border-t px-6 py-6">
+        <p className="text-fg-subtle text-xs">
+          Quorlyn — multi-tenant examinations. One account works across every
+          organization you belong to.
+        </p>
+      </footer>
     </div>
   );
 }

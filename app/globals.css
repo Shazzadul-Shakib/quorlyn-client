@@ -1,26 +1,382 @@
 @import "tailwindcss";
+@import "../styles/mathlive-fonts.css";
+@import "../styles/mathlive-static.css";
+
+/* ==========================================================================
+   Quorlyn design tokens — the ONLY place a colour is defined.
+   Components reference generated utilities (bg-surface, text-fg-muted, …);
+   no hex, rgb(), oklch() or bg-[…] literal may appear anywhere else.
+   Light is the default; dark follows the system unless .light / .dark is set
+   on <html>, so switching needs no JavaScript to look right.
+
+   Palette: teal-green primary, amber accent, a cooler/deeper neutral scale,
+   and a warmer red for danger — used sparingly as a two-stop gradient on
+   the highest-emphasis surfaces (primary buttons, the brand mark), not
+   smeared across the whole UI.
+   ========================================================================== */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* surfaces */
+  --canvas: oklch(98.2% 0.006 200);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(96.5% 0.007 200);
+  --surface-3: oklch(93.5% 0.009 200);
+  --overlay: oklch(22% 0.02 200 / 0.45);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* lines */
+  --border: oklch(90% 0.009 200);
+  --border-strong: oklch(82% 0.013 200);
+
+  /* text */
+  --fg: oklch(20% 0.02 200);
+  --fg-muted: oklch(48% 0.02 200);
+  --fg-subtle: oklch(62% 0.017 200);
+  --fg-inverted: oklch(99% 0 0);
+
+  /* brand — teal-green */
+  --primary: oklch(46% 0.13 172);
+  --primary-hover: oklch(40% 0.13 172);
+  --primary-active: oklch(35% 0.12 172);
+  --primary-fg: oklch(99% 0 0);
+  --primary-soft: oklch(93% 0.045 172);
+  --primary-border: oklch(82% 0.09 172);
+
+  /* accent — amber, the gradient's other stop */
+  --accent: oklch(54% 0.16 45);
+  --accent-fg: oklch(30% 0.11 45);
+  --accent-soft: oklch(95% 0.05 45);
+
+  --gradient-brand: linear-gradient(135deg, oklch(46% 0.14 172) 0%, oklch(54% 0.16 45) 100%);
+
+  /* status */
+  --success: oklch(50% 0.15 145);
+  --success-fg: oklch(34% 0.12 145);
+  --success-soft: oklch(94% 0.045 145);
+
+  --warning: oklch(68% 0.16 74);
+  --warning-fg: oklch(42% 0.11 74);
+  --warning-soft: oklch(95% 0.05 74);
+
+  --danger: oklch(54% 0.21 20);
+  --danger-hover: oklch(48% 0.21 20);
+  --danger-fg: oklch(44% 0.18 20);
+  --danger-soft: oklch(95% 0.04 20);
+
+  --info: oklch(56% 0.15 245);
+  --info-fg: oklch(40% 0.12 245);
+  --info-soft: oklch(95% 0.035 245);
+
+  --neutral-fg: oklch(42% 0.015 200);
+  --neutral-soft: oklch(93% 0.006 200);
+
+  /* exam runner */
+  --exam-canvas: oklch(96% 0.008 200);
+  --exam-surface: oklch(100% 0 0);
+  --timer-calm: oklch(46% 0.13 172);
+  --timer-warn: oklch(64% 0.16 74);
+  --timer-critical: oklch(54% 0.21 20);
+
+  /* data visualisation — categorical 5-slot palette, validated with the
+     dataviz skill's validate_palette.js (light + dark, adjacent CVD pairs
+     and normal-vision floor both pass; chroma/lightness bands pass). Do not
+     hand-edit hue/chroma without re-running the validator. */
+  --chart-1: oklch(50% 0.15 172);
+  --chart-2: oklch(55% 0.22 35);
+  --chart-3: oklch(48% 0.17 150);
+  --chart-4: oklch(55% 0.16 280);
+  --chart-5: oklch(58% 0.18 340);
+  --chart-track: oklch(92% 0.008 200);
+
+  /* focus */
+  --ring: oklch(46% 0.13 172 / 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light) {
+    --canvas: oklch(11% 0.014 200);
+    --surface: oklch(15% 0.016 200);
+    --surface-2: oklch(18.5% 0.018 200);
+    --surface-3: oklch(22.5% 0.02 200);
+    --overlay: oklch(8% 0.01 200 / 0.65);
+
+    --border: oklch(26% 0.02 200);
+    --border-strong: oklch(34% 0.024 200);
+
+    --fg: oklch(96% 0.006 200);
+    --fg-muted: oklch(74% 0.014 200);
+    --fg-subtle: oklch(58% 0.014 200);
+    --fg-inverted: oklch(14% 0.02 200);
+
+    --primary: oklch(72% 0.14 172);
+    --primary-hover: oklch(78% 0.13 172);
+    --primary-active: oklch(66% 0.14 172);
+    --primary-fg: oklch(14% 0.03 172);
+    --primary-soft: oklch(26% 0.06 172);
+    --primary-border: oklch(36% 0.09 172);
+
+    --accent: oklch(76% 0.14 45);
+    --accent-fg: oklch(88% 0.1 45);
+    --accent-soft: oklch(27% 0.06 45);
+
+    --gradient-brand: linear-gradient(135deg, oklch(72% 0.14 172) 0%, oklch(76% 0.14 45) 100%);
+
+    --success: oklch(74% 0.15 145);
+    --success-fg: oklch(87% 0.12 145);
+    --success-soft: oklch(26% 0.06 145);
+
+    --warning: oklch(80% 0.15 74);
+    --warning-fg: oklch(89% 0.12 74);
+    --warning-soft: oklch(30% 0.06 74);
+
+    --danger: oklch(70% 0.19 20);
+    --danger-hover: oklch(75% 0.18 20);
+    --danger-fg: oklch(87% 0.13 20);
+    --danger-soft: oklch(30% 0.08 20);
+
+    --info: oklch(72% 0.13 245);
+    --info-fg: oklch(87% 0.1 245);
+    --info-soft: oklch(28% 0.06 245);
+
+    --neutral-fg: oklch(78% 0.012 200);
+    --neutral-soft: oklch(25% 0.014 200);
+
+    --exam-canvas: oklch(9.5% 0.014 200);
+    --exam-surface: oklch(14.5% 0.016 200);
+    --timer-calm: oklch(72% 0.14 172);
+    --timer-warn: oklch(80% 0.15 74);
+    --timer-critical: oklch(70% 0.19 20);
+
+    --chart-1: oklch(65% 0.14 172);
+    --chart-2: oklch(60% 0.20 35);
+    --chart-3: oklch(55% 0.15 150);
+    --chart-4: oklch(65% 0.16 280);
+    --chart-5: oklch(65% 0.17 340);
+    --chart-track: oklch(24% 0.018 200);
+
+    --ring: oklch(72% 0.14 172 / 0.55);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark {
+  --canvas: oklch(11% 0.014 200);
+  --surface: oklch(15% 0.016 200);
+  --surface-2: oklch(18.5% 0.018 200);
+  --surface-3: oklch(22.5% 0.02 200);
+  --overlay: oklch(8% 0.01 200 / 0.65);
+
+  --border: oklch(26% 0.02 200);
+  --border-strong: oklch(34% 0.024 200);
+
+  --fg: oklch(96% 0.006 200);
+  --fg-muted: oklch(74% 0.014 200);
+  --fg-subtle: oklch(58% 0.014 200);
+  --fg-inverted: oklch(14% 0.02 200);
+
+  --primary: oklch(72% 0.14 172);
+  --primary-hover: oklch(78% 0.13 172);
+  --primary-active: oklch(66% 0.14 172);
+  --primary-fg: oklch(14% 0.03 172);
+  --primary-soft: oklch(26% 0.06 172);
+  --primary-border: oklch(36% 0.09 172);
+
+  --accent: oklch(76% 0.14 45);
+  --accent-fg: oklch(88% 0.1 45);
+  --accent-soft: oklch(27% 0.06 45);
+
+  --gradient-brand: linear-gradient(135deg, oklch(72% 0.14 172) 0%, oklch(76% 0.14 45) 100%);
+
+  --success: oklch(74% 0.15 145);
+  --success-fg: oklch(87% 0.12 145);
+  --success-soft: oklch(26% 0.06 145);
+
+  --warning: oklch(80% 0.15 74);
+  --warning-fg: oklch(89% 0.12 74);
+  --warning-soft: oklch(30% 0.06 74);
+
+  --danger: oklch(70% 0.19 20);
+  --danger-hover: oklch(75% 0.18 20);
+  --danger-fg: oklch(87% 0.13 20);
+  --danger-soft: oklch(30% 0.08 20);
+
+  --info: oklch(72% 0.13 245);
+  --info-fg: oklch(87% 0.1 245);
+  --info-soft: oklch(28% 0.06 245);
+
+  --neutral-fg: oklch(78% 0.012 200);
+  --neutral-soft: oklch(25% 0.014 200);
+
+  --exam-canvas: oklch(9.5% 0.014 200);
+  --exam-surface: oklch(14.5% 0.016 200);
+  --timer-calm: oklch(72% 0.14 172);
+  --timer-warn: oklch(80% 0.15 74);
+  --timer-critical: oklch(70% 0.19 20);
+
+  --chart-1: oklch(65% 0.14 172);
+  --chart-2: oklch(60% 0.20 35);
+  --chart-3: oklch(55% 0.15 150);
+  --chart-4: oklch(65% 0.16 280);
+  --chart-5: oklch(65% 0.17 340);
+  --chart-track: oklch(24% 0.018 200);
+
+  --ring: oklch(72% 0.14 172 / 0.55);
+}
+
+/* Map the raw properties onto Tailwind's token namespace. `inline` keeps the
+   utilities emitting var(--x), which is what lets the theme switch at runtime. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-overlay: var(--overlay);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-inverted: var(--fg-inverted);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-border: var(--primary-border);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-success: var(--success);
+  --color-success-fg: var(--success-fg);
+  --color-success-soft: var(--success-soft);
+
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-soft: var(--warning-soft);
+
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-info: var(--info);
+  --color-info-fg: var(--info-fg);
+  --color-info-soft: var(--info-soft);
+
+  --color-neutral-fg: var(--neutral-fg);
+  --color-neutral-soft: var(--neutral-soft);
+
+  --color-exam-canvas: var(--exam-canvas);
+  --color-exam-surface: var(--exam-surface);
+  --color-timer-calm: var(--timer-calm);
+  --color-timer-warn: var(--timer-warn);
+  --color-timer-critical: var(--timer-critical);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-track: var(--chart-track);
+
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist-sans), var(--font-bangla), ui-sans-serif,
+    system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-bangla: var(--font-bangla), var(--font-geist-sans), sans-serif;
+
+  --radius-card: 0.625rem;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-soft);
+    color: var(--color-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  hr {
+    border-color: var(--color-border);
+  }
+
+  /* Bengali conjuncts need more vertical room than Latin does. */
+  [lang="bn"],
+  .text-content {
+    line-height: 1.75;
+  }
+}
+
+@layer components {
+  /* The one gradient in the system — the two brand hues, used only on the
+     highest-emphasis surfaces (primary buttons, the brand mark). */
+  .bg-gradient-brand {
+    background-image: var(--gradient-brand);
+  }
+
+  /* Server-rendered MathLive markup. Long formulae scroll inside their own
+     box rather than widening the page. */
+  .math-content {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+  }
+
+  .math-content .ML__latex {
+    color: inherit;
+  }
+
+  /* MathLive's editable field is a web component; its internals are only
+     reachable through ::part(), which utilities cannot express. */
+  math-field {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-fg);
+    padding: 0.5rem 0.625rem;
+    font-size: 1rem;
+    --caret-color: var(--color-primary);
+    --selection-background-color: var(--color-primary-soft);
+    --contains-highlight-background-color: var(--color-surface-3);
+    --primary: var(--color-primary);
+  }
+
+  math-field:focus-within {
+    border-color: var(--color-primary);
+    outline: 2px solid var(--color-ring);
+    outline-offset: 1px;
+  }
+
+  math-field::part(virtual-keyboard-toggle),
+  math-field::part(menu-toggle) {
+    color: var(--color-fg-muted);
+  }
 }
