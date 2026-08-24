@@ -342,12 +342,6 @@
 
   /* Server-rendered MathLive markup. Long formulae scroll inside their own
      box rather than widening the page. */
-  .math-content {
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 100%;
-  }
-
   .math-content .ML__latex {
     color: inherit;
   }

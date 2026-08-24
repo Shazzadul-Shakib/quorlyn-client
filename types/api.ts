@@ -110,6 +110,8 @@ export interface Organization {
   /** Platform-level switch (superadmin-controlled). False blocks every member from acting in it. */
   isActive: boolean;
   createdAt: string;
+  teacherCount: number;
+  studentCount: number;
 }
 
 export interface PlatformStats {
@@ -118,20 +120,6 @@ export interface PlatformStats {
   organizationsSuspended: number;
   usersTotal: number;
   membershipsByRole: { role: OrgRole; count: number }[];
-}
-
-export interface PlatformUser {
-  id: string;
-  email: string;
-  platformRole: PlatformRole;
-  isActive: boolean;
-  singleDeviceEnforced: boolean;
-  createdAt: string;
-  membershipCount: number;
-}
-
-export interface PlatformUserDetail extends PlatformUser {
-  memberships: MembershipSummary[];
 }
 
 export interface Member {

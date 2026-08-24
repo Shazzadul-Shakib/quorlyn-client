@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { getMe } from "@/features/auth/me";
-import { getStudentDashboard, getTeacherDashboard } from "@/features/dashboard/api";
+import {
+  getOrganizationDashboard,
+  getStudentDashboard,
+  getTeacherDashboard,
+} from "@/features/dashboard/api";
 import { getStudentAttempts } from "@/features/student/api";
 import { listOrganizations, getPlatformStats } from "@/features/admin/api";
 import { StudentHome } from "@/features/dashboard/components/student-home";
 import { TeacherHome } from "@/features/dashboard/components/teacher-home";
+import { OrgOverview } from "@/features/organization/components/org-overview";
 import { SuperadminHome } from "@/features/admin/components/superadmin-home";
 import { PageHeader } from "@/components/ui/page";
 import { Card, CardBody } from "@/components/ui/card";
@@ -31,7 +36,17 @@ export default async function AppHomePage() {
   }
 
   if (org?.role === "TEACHER") {
-    const canSeeDashboard = org.isOrgOwner || org.permissions.includes("VIEW_RESULTS");
+    if (org.isOrgOwner) {
+      const dashboard = await getOrganizationDashboard();
+      return (
+        <>
+          <PageHeader title="Home" description="A snapshot of your organization." />
+          <OrgOverview dashboard={dashboard} />
+        </>
+      );
+    }
+
+    const canSeeDashboard = org.permissions.includes("VIEW_RESULTS");
     if (canSeeDashboard) {
       const dashboard = await getTeacherDashboard();
       return (

@@ -11,9 +11,13 @@ const MATH_SEGMENT = /(\$\$[\s\S]+?\$\$|\$(?:\\\$|[^$\n])+?\$)/g;
 
 function markup(latex: string, displayMode: boolean): string {
   try {
-    return convertLatexToMarkup(latex, {
-      defaultMode: displayMode ? "math" : "inline-math",
-    });
+    // `defaultMode` only controls math-vs-text parsing, not size — MathLive
+    // renders `"math"` and `"inline-math"` identically. The actual
+    // display/text sizing (e.g. a `\lim` stacking below vs. beside, a
+    // fraction shrinking) comes from TeX's own style switch, so it has to be
+    // in the LaTeX source itself.
+    const styled = `${displayMode ? "\\displaystyle" : "\\textstyle"} ${latex}`;
+    return convertLatexToMarkup(styled, { defaultMode: "math" });
   } catch {
     // Never blank a question because one formula failed to parse.
     return escapeHtml(latex);
@@ -74,7 +78,19 @@ export function RenderedContent({
         return (
           <span
             key={index}
-            className={cn("math-content", isDisplay ? "my-2 block" : "inline-block")}
+            // Inline math stays a plain `inline` span: MathLive bakes a
+            // baseline-aligning strut into its own markup, which only works
+            // if the browser treats this as ordinary inline content. Making
+            // it `inline-block` (or giving it non-visible `overflow`) makes
+            // the browser discard that strut and use the box's bottom edge
+            // as its baseline instead — text next to it then floats at the
+            // formula's *bottom*, not its middle, which is the misalignment
+            // this fixes. Display math has no such constraint, so it's free
+            // to scroll instead of overflowing the page on a long equation.
+            className={cn(
+              "math-content",
+              isDisplay && "my-2 block max-w-full overflow-x-auto overflow-y-hidden",
+            )}
             dangerouslySetInnerHTML={{ __html: markup(latex, isDisplay) }}
           />
         );

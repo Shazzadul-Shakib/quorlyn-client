@@ -64,8 +64,12 @@ export function Field({
   );
 }
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(CONTROL, className)} {...props} />;
+export function Input({
+  className,
+  ref,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
+  return <input ref={ref} className={cn(CONTROL, className)} {...props} />;
 }
 
 export function Textarea({

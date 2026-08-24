@@ -11,7 +11,7 @@ import {
   updateOrganizationName,
 } from "./api";
 import { errorMessage } from "@/lib/api/errors";
-import type { BatchInviteResponse, Invite, OrgRole, Permission } from "@/types/api";
+import type { BatchInviteResponse, Invite, MembershipStatus, OrgRole, Permission } from "@/types/api";
 
 export interface FormState {
   error?: string;
@@ -22,30 +22,33 @@ function readPermissions(formData: FormData): Permission[] {
   return formData.getAll("permissions").map(String) as Permission[];
 }
 
+/** Owner flag + permissions only — status moved to the inline table toggle. */
 export async function updateMemberAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
-  const role = String(formData.get("role") ?? "");
-  const status = String(formData.get("status") ?? "ACTIVE") as "ACTIVE" | "SUSPENDED";
 
   try {
-    if (role === "TEACHER") {
-      await updateMember(id, {
-        status,
-        isOrgOwner: formData.get("isOrgOwner") === "on",
-        permissions: readPermissions(formData),
-      });
-    } else {
-      await updateMember(id, { status });
-    }
+    await updateMember(id, {
+      isOrgOwner: formData.get("isOrgOwner") === "on",
+      permissions: readPermissions(formData),
+    });
   } catch (error) {
     return { error: errorMessage(error, "Could not update this member") };
   }
 
   revalidatePath("/app/organization/members");
   redirect("/app/organization/members");
+}
+
+/** Inline suspend/restore from the members table — the common case doesn't need the full edit page. */
+export async function setMemberStatusAction(
+  id: string,
+  status: MembershipStatus,
+): Promise<void> {
+  await updateMember(id, { status });
+  revalidatePath("/app/organization/members");
 }
 
 export interface InviteFormState {

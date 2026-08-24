@@ -38,7 +38,7 @@ export default async function AdminOrganizationsPage(
         actions={<CreateOrganizationModal />}
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <Stat label="Total" value={stats.organizationsTotal} tone="primary" />
         <Stat label="Active" value={stats.organizationsActive} tone="success" />
         <Stat
@@ -46,34 +46,61 @@ export default async function AdminOrganizationsPage(
           value={stats.organizationsSuspended}
           tone={stats.organizationsSuspended > 0 ? "danger" : "default"}
         />
+        <Stat label="Total users" value={stats.usersTotal} />
       </div>
 
-      {stats.organizationsTotal > 0 ? (
-        <Card>
-          <CardHeader title="Access status" description="Active vs. suspended organizations." />
-          <CardBody>
-            <HorizontalBarChart
-              ariaLabel="Organizations by access status"
-              data={[
-                {
-                  key: "active",
-                  label: "Active",
-                  value: stats.organizationsActive,
-                  displayValue: String(stats.organizationsActive),
-                  tone: "success",
-                },
-                {
-                  key: "suspended",
-                  label: "Suspended",
-                  value: stats.organizationsSuspended,
-                  displayValue: String(stats.organizationsSuspended),
-                  tone: "danger",
-                },
-              ]}
+      {/* Aggregates only — never who's in an organization or their details.
+          That's each organization's own owners/admins to see, on their own
+          Members page. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {stats.organizationsTotal > 0 ? (
+          <Card>
+            <CardHeader title="Access status" description="Active vs. suspended organizations." />
+            <CardBody>
+              <HorizontalBarChart
+                ariaLabel="Organizations by access status"
+                data={[
+                  {
+                    key: "active",
+                    label: "Active",
+                    value: stats.organizationsActive,
+                    displayValue: String(stats.organizationsActive),
+                    tone: "success",
+                  },
+                  {
+                    key: "suspended",
+                    label: "Suspended",
+                    value: stats.organizationsSuspended,
+                    displayValue: String(stats.organizationsSuspended),
+                    tone: "danger",
+                  },
+                ]}
+              />
+            </CardBody>
+          </Card>
+        ) : null}
+
+        {stats.membershipsByRole.length > 0 ? (
+          <Card>
+            <CardHeader
+              title="Memberships by role"
+              description="Platform-wide — a user with two organizations counts twice."
             />
-          </CardBody>
-        </Card>
-      ) : null}
+            <CardBody>
+              <HorizontalBarChart
+                ariaLabel="Active memberships by role"
+                data={stats.membershipsByRole.map((row) => ({
+                  key: row.role,
+                  label: row.role === "TEACHER" ? "Teacher" : "Student",
+                  value: row.count,
+                  displayValue: String(row.count),
+                  tone: row.role === "TEACHER" ? "chart-1" : "chart-2",
+                }))}
+              />
+            </CardBody>
+          </Card>
+        ) : null}
+      </div>
 
       <Card className="overflow-hidden">
         <CardHeader title="All organizations" />
@@ -91,6 +118,8 @@ export default async function AdminOrganizationsPage(
               <THead>
                 <TH>Name</TH>
                 <TH>Join code</TH>
+                <TH align="right">Teachers</TH>
+                <TH align="right">Students</TH>
                 <TH>Created</TH>
                 <TH align="right">Access</TH>
               </THead>
@@ -104,6 +133,8 @@ export default async function AdminOrganizationsPage(
                         <CopyButton value={organization.joinCode} label="Copy" variant="ghost" />
                       </div>
                     </TD>
+                    <TD align="right">{organization.teacherCount}</TD>
+                    <TD align="right">{organization.studentCount}</TD>
                     <TD>{formatDate(organization.createdAt)}</TD>
                     <TD align="right">
                       <OrganizationStatusToggle

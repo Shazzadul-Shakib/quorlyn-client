@@ -10,6 +10,7 @@ import {
 } from "../actions";
 import { Alert } from "@/components/ui/alert";
 import { Field, Input } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
@@ -52,10 +53,9 @@ export function LoginForm({ next }: { next: string }) {
       </Field>
 
       <Field label="Password" htmlFor="password" required>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           minLength={8}
           required

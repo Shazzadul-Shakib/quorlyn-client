@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getMe } from "@/features/auth/me";
 import { requireOrgPermission } from "@/features/shell/guard";
 import { listMembers } from "@/features/organization/api";
+import { MemberStatusToggle } from "@/features/organization/components/member-status-toggle";
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { Card } from "@/components/ui/card";
 import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
@@ -84,9 +85,21 @@ export default async function MembersPage(props: PageProps<"/app/organization/me
                     </TD>
                     <TD>{formatDate(member.joinedAt)}</TD>
                     <TD align="right">
-                      <Link href={`/app/organization/members/${member.id}`} className="text-primary text-sm hover:underline">
-                        Edit
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        {member.role === "TEACHER" ? (
+                          <Link
+                            href={`/app/organization/members/${member.id}`}
+                            className="text-primary text-sm hover:underline"
+                          >
+                            Edit
+                          </Link>
+                        ) : null}
+                        <MemberStatusToggle
+                          memberId={member.id}
+                          memberEmail={member.email}
+                          status={member.status}
+                        />
+                      </div>
                     </TD>
                   </TR>
                 ))}

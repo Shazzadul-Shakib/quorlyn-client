@@ -1,26 +1,27 @@
+import Link from "next/link";
 import { Stat, EmptyState } from "@/components/ui/page";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
-import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
 import { ResumeAttemptButton } from "@/features/student/components/resume-attempt-button";
-import { formatDate } from "@/lib/utils";
+import { QuizProgressTable } from "@/features/student/components/quiz-progress-table";
 import { IconBook } from "@/components/ui/icons";
 import type { Attempt, StudentDashboard, StudentProgressEntry } from "@/types/api";
 
 function groupByOrganization(
   entries: StudentProgressEntry[],
-): { organizationName: string; entries: StudentProgressEntry[] }[] {
+): { organizationId: string; organizationName: string; entries: StudentProgressEntry[] }[] {
   const order: string[] = [];
-  const byName = new Map<string, StudentProgressEntry[]>();
+  const byId = new Map<string, StudentProgressEntry[]>();
   for (const entry of entries) {
-    if (!byName.has(entry.organizationName)) {
-      order.push(entry.organizationName);
-      byName.set(entry.organizationName, []);
+    if (!byId.has(entry.organizationId)) {
+      order.push(entry.organizationId);
+      byId.set(entry.organizationId, []);
     }
-    byName.get(entry.organizationName)!.push(entry);
+    byId.get(entry.organizationId)!.push(entry);
   }
-  return order.map((organizationName) => ({
-    organizationName,
-    entries: byName.get(organizationName)!,
+  return order.map((organizationId) => ({
+    organizationId,
+    organizationName: byId.get(organizationId)![0].organizationName,
+    entries: byId.get(organizationId)!,
   }));
 }
 
@@ -63,28 +64,19 @@ export function StudentHome({
         />
       ) : (
         groups.map((group) => (
-          <Card key={group.organizationName} className="overflow-hidden">
-            <CardHeader title={group.organizationName} />
-            <Table>
-              <THead>
-                <TH>Quiz</TH>
-                <TH align="right">Attempts</TH>
-                <TH align="right">Best score</TH>
-                <TH>Last attempt</TH>
-              </THead>
-              <TBody>
-                {group.entries.map((entry) => (
-                  <TR key={entry.quizId}>
-                    <TD>{entry.quizTitle}</TD>
-                    <TD align="right">{entry.attempts}</TD>
-                    <TD align="right">
-                      {entry.bestScore === null ? "—" : `${entry.bestScore}/${entry.maxScore}`}
-                    </TD>
-                    <TD>{entry.lastAttemptAt ? formatDate(entry.lastAttemptAt) : "—"}</TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
+          <Card key={group.organizationId} className="overflow-hidden">
+            <CardHeader
+              title={group.organizationName}
+              action={
+                <Link
+                  href={`/app/organizations/${group.organizationId}`}
+                  className="text-primary text-sm font-medium hover:underline"
+                >
+                  View organization →
+                </Link>
+              }
+            />
+            <QuizProgressTable entries={group.entries} />
           </Card>
         ))
       )}

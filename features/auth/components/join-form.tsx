@@ -5,6 +5,7 @@ import Link from "next/link";
 import { joinOrganizationAction, type AuthFormState } from "../actions";
 import { Alert } from "@/components/ui/alert";
 import { Field, Input } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 const EMPTY: AuthFormState = {};
@@ -56,10 +57,9 @@ export function JoinForm({ defaultCode = "" }: { defaultCode?: string }) {
         hint="New here? This sets your password. Already have an account? Use its password."
         required
       >
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           minLength={8}
           required
