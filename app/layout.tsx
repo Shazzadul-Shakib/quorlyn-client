@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
 import Script from "next/script";
 import { ConfirmProvider } from "@/components/ui/confirm-provider";
+import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="bg-canvas text-fg flex min-h-full flex-col">
         <ConfirmProvider>{children}</ConfirmProvider>
+        <Toaster />
       </body>
     </html>
   );

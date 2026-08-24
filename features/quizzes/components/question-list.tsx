@@ -7,7 +7,6 @@ import { RenderedContent } from "@/components/math/rendered-content";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/page";
 import {
   IconArrowUp,
@@ -17,6 +16,7 @@ import {
   IconPlus,
   IconBook,
 } from "@/components/ui/icons";
+import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/components/ui/confirm-provider";
@@ -40,8 +40,8 @@ export function QuestionList({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const confirm = useConfirm();
+  const toast = useToast();
 
   const sorted = questions.slice().sort((a, b) => a.position - b.position);
 
@@ -51,12 +51,11 @@ export function QuestionList({
     const ids = sorted.map((q) => q.id);
     const [moved] = ids.splice(index, 1);
     ids.splice(target, 0, moved);
-    setError(null);
     startTransition(async () => {
       try {
         await reorderQuestionsAction(quizId, ids);
       } catch (cause) {
-        setError(errorMessage(cause, "Could not reorder questions"));
+        toast.error(errorMessage(cause, "Could not reorder questions"));
       }
     });
   }
@@ -68,20 +67,17 @@ export function QuestionList({
       tone: "danger",
     });
     if (!ok) return;
-    setError(null);
     startTransition(async () => {
       try {
         await deleteQuestionAction(quizId, questionId);
       } catch (cause) {
-        setError(errorMessage(cause, "Could not delete this question"));
+        toast.error(errorMessage(cause, "Could not delete this question"));
       }
     });
   }
 
   return (
     <div className="space-y-4">
-      {error ? <Alert tone="danger">{error}</Alert> : null}
-
       {sorted.length === 0 && !adding ? (
         <Card>
           <div className="p-5">

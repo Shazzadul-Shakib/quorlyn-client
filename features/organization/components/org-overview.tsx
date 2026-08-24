@@ -3,7 +3,7 @@ import { Stat, EmptyState } from "@/components/ui/page";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
 import { QuizStatusBadge } from "@/components/quiz-status-badge";
-import { IconBook } from "@/components/ui/icons";
+import { IconBook, IconUsers } from "@/components/ui/icons";
 import type { OrganizationDashboard } from "@/types/api";
 
 export function OrgOverview({ dashboard }: { dashboard: OrganizationDashboard }) {
@@ -58,6 +58,37 @@ export function OrgOverview({ dashboard }: { dashboard: OrganizationDashboard })
                       ? "—"
                       : `${quiz.averageScore.toFixed(1)}/${quiz.totalPoints}`}
                   </TD>
+                </TR>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardHeader
+          title="Teacher performance"
+          description="Who's authoring quizzes, sorted by how many they've created."
+        />
+        {dashboard.teacherStats.length === 0 ? (
+          <div className="p-5">
+            <EmptyState icon={<IconUsers />} title="No teachers yet" />
+          </div>
+        ) : (
+          <Table>
+            <THead>
+              <TH>Teacher</TH>
+              <TH align="right">Quizzes</TH>
+              <TH align="right">Published</TH>
+              <TH align="right">Attempts</TH>
+            </THead>
+            <TBody>
+              {dashboard.teacherStats.map((teacher) => (
+                <TR key={teacher.teacherId}>
+                  <TD>{teacher.email}</TD>
+                  <TD align="right">{teacher.quizCount}</TD>
+                  <TD align="right">{teacher.publishedCount}</TD>
+                  <TD align="right">{teacher.totalAttempts}</TD>
                 </TR>
               ))}
             </TBody>

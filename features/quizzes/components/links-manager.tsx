@@ -11,6 +11,7 @@ import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/page";
 import { IconLink } from "@/components/ui/icons";
+import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api/errors";
 import { formatDate } from "@/lib/utils";
 import { useConfirm } from "@/components/ui/confirm-provider";
@@ -47,10 +48,10 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
   const [links, setLinks] = useState(initialLinks);
   const [label, setLabel] = useState("");
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const [justCreated, setJustCreated] = useState<QuizLink | null>(null);
   const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({});
   const confirm = useConfirm();
+  const toast = useToast();
 
   // Deferred to after mount, like the theme override: the server has no
   // access to localStorage, so this can only be read client-side.
@@ -61,7 +62,6 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
   /* eslint-enable react-hooks/set-state-in-effect */
 
   function create() {
-    setError(null);
     startTransition(async () => {
       try {
         const link = await createLinkAction(quizId, label.trim() ? { label: label.trim() } : {});
@@ -74,7 +74,7 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
           writeCachedUrls(quizId, next);
         }
       } catch (cause) {
-        setError(errorMessage(cause, "Could not create a link"));
+        toast.error(errorMessage(cause, "Could not create a link"));
       }
     });
   }
@@ -87,7 +87,6 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
       tone: "danger",
     });
     if (!ok) return;
-    setError(null);
     startTransition(async () => {
       try {
         await revokeLinkAction(quizId, linkId);
@@ -101,15 +100,13 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
           writeCachedUrls(quizId, next);
         }
       } catch (cause) {
-        setError(errorMessage(cause, "Could not revoke this link"));
+        toast.error(errorMessage(cause, "Could not revoke this link"));
       }
     });
   }
 
   return (
     <div className="space-y-4">
-      {error ? <Alert tone="danger">{error}</Alert> : null}
-
       {justCreated?.url ? (
         <Alert tone="success" title="Link created — copy it now">
           <div className="mt-1 flex items-center gap-2">

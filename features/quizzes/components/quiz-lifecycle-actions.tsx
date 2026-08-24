@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import {
   archiveQuizAction,
   closeQuizAction,
@@ -9,33 +9,31 @@ import {
   publishQuizAction,
 } from "../actions";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
 import { useConfirm } from "@/components/ui/confirm-provider";
 import type { ConfirmOptions } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api/errors";
 import type { Quiz } from "@/types/api";
 
 export function QuizLifecycleActions({ quiz }: { quiz: Quiz }) {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const confirm = useConfirm();
+  const toast = useToast();
 
   async function run(label: string, confirmOptions: ConfirmOptions | null, action: () => Promise<void>) {
     if (confirmOptions && !(await confirm(confirmOptions))) return;
-    setError(null);
     startTransition(async () => {
       try {
         await action();
       } catch (cause) {
         if (cause instanceof Error && cause.message.includes("NEXT_REDIRECT")) throw cause;
-        setError(errorMessage(cause, `Could not ${label.toLowerCase()} this quiz`));
+        toast.error(errorMessage(cause, `Could not ${label.toLowerCase()} this quiz`));
       }
     });
   }
 
   return (
     <div className="flex flex-col items-end gap-2">
-      {error ? <Alert tone="danger">{error}</Alert> : null}
       <div className="flex flex-wrap justify-end gap-2">
         {quiz.status === "DRAFT" ? (
           <>
