@@ -171,6 +171,7 @@ export interface Quiz {
   id: string;
   organizationId: string;
   createdById: string;
+  createdByEmail: string;
   title: string;
   description: string | null;
   language: Language;
@@ -377,6 +378,14 @@ export interface QuizDashboard {
   submissionCauses: SubmissionCauseCount[];
 }
 
+export interface TeacherStats {
+  teacherId: string;
+  email: string;
+  quizCount: number;
+  publishedCount: number;
+  totalAttempts: number;
+}
+
 export interface OrganizationDashboard {
   organizationId: string;
   organizationName: string;
@@ -386,6 +395,7 @@ export interface OrganizationDashboard {
   publishedQuizCount: number;
   attemptsInPeriod: number;
   recentQuizzes: QuizOverview[];
+  teacherStats: TeacherStats[];
 }
 
 export interface StudentProgressEntry {

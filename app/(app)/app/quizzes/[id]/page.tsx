@@ -45,6 +45,7 @@ export default async function QuizEditorPage(props: PageProps<"/app/quizzes/[id]
             <span>
               {quiz.questionCount} question{quiz.questionCount === 1 ? "" : "s"} · {quiz.totalPoints} pts
             </span>
+            <span className="text-fg-subtle">· Created by {quiz.createdByEmail}</span>
           </span>
         }
         actions={

@@ -86,6 +86,7 @@ export default async function QuizzesPage(props: PageProps<"/app/quizzes">) {
               <THead>
                 <TH>Title</TH>
                 <TH>Status</TH>
+                <TH>Created by</TH>
                 <TH align="right">Questions</TH>
                 <TH align="right">Points</TH>
                 <TH>Created</TH>
@@ -101,6 +102,7 @@ export default async function QuizzesPage(props: PageProps<"/app/quizzes">) {
                     <TD>
                       <QuizStatusBadge status={quiz.status} />
                     </TD>
+                    <TD className="text-fg-muted">{quiz.createdByEmail}</TD>
                     <TD align="right">{quiz.questionCount}</TD>
                     <TD align="right">{quiz.totalPoints}</TD>
                     <TD>{formatDate(quiz.createdAt)}</TD>

@@ -3,9 +3,9 @@
 import { useTransition, useState } from "react";
 import { selectOrganizationAction } from "../actions";
 import { Badge } from "@/components/ui/badge";
-import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/page";
 import { IconBuilding, IconChevronRight } from "@/components/ui/icons";
+import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api/errors";
 import type { MembershipSummary } from "@/types/api";
 
@@ -18,18 +18,17 @@ export function OrganizationPicker({
 }) {
   const [pending, startTransition] = useTransition();
   const [selecting, setSelecting] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   function choose(organizationId: string) {
     setSelecting(organizationId);
-    setError(null);
     startTransition(async () => {
       try {
         await selectOrganizationAction(organizationId, next);
       } catch (cause) {
         // A redirect throws by design; only real failures land here.
         if (cause instanceof Error && cause.message.includes("NEXT_REDIRECT")) throw cause;
-        setError(errorMessage(cause, "Could not open that organization"));
+        toast.error(errorMessage(cause, "Could not open that organization"));
         setSelecting(null);
       }
     });
@@ -37,8 +36,6 @@ export function OrganizationPicker({
 
   return (
     <div className="space-y-3">
-      {error ? <Alert tone="danger">{error}</Alert> : null}
-
       <ul className="space-y-2">
         {memberships.map((membership) => {
           const suspended = membership.status === "SUSPENDED";
