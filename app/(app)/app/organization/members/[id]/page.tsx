@@ -25,6 +25,10 @@ export default async function MemberEditPage(props: PageProps<"/app/organization
     throw error;
   }
 
+  // Students have nothing here — no owner flag, no permissions — and status
+  // now toggles inline from the members table.
+  if (member.role !== "TEACHER") notFound();
+
   return (
     <>
       <PageHeader

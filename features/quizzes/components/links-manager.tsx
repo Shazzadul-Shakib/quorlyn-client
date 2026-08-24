@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createLinkAction, revokeLinkAction } from "../actions";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
@@ -16,13 +16,49 @@ import { formatDate } from "@/lib/utils";
 import { useConfirm } from "@/components/ui/confirm-provider";
 import type { QuizLink } from "@/types/api";
 
+/**
+ * The backend only ever returns a link's raw URL once, at creation (it
+ * doesn't keep the plaintext token around to hand back later). Caching it
+ * here just remembers, in this browser, what the server already told us
+ * once — it never asks the server for it again — so "copy it later" works
+ * without minting a new link (and orphaning the old one) every time.
+ */
+const CACHE_KEY_PREFIX = "quorlyn.quiz-links.";
+
+function readCachedUrls(quizId: string): Record<string, string> {
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY_PREFIX + quizId);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCachedUrls(quizId: string, urls: Record<string, string>) {
+  try {
+    window.localStorage.setItem(CACHE_KEY_PREFIX + quizId, JSON.stringify(urls));
+  } catch {
+    // Best-effort convenience cache; losing it just means falling back to
+    // creating a new link, same as before this existed.
+  }
+}
+
 export function LinksManager({ quizId, links: initialLinks }: { quizId: string; links: QuizLink[] }) {
   const [links, setLinks] = useState(initialLinks);
   const [label, setLabel] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [justCreated, setJustCreated] = useState<QuizLink | null>(null);
+  const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({});
   const confirm = useConfirm();
+
+  // Deferred to after mount, like the theme override: the server has no
+  // access to localStorage, so this can only be read client-side.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setCachedUrls(readCachedUrls(quizId));
+  }, [quizId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function create() {
     setError(null);
@@ -32,6 +68,11 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
         setLinks((prev) => [link, ...prev]);
         setJustCreated(link);
         setLabel("");
+        if (link.url) {
+          const next = { ...cachedUrls, [link.id]: link.url };
+          setCachedUrls(next);
+          writeCachedUrls(quizId, next);
+        }
       } catch (cause) {
         setError(errorMessage(cause, "Could not create a link"));
       }
@@ -53,6 +94,12 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
         setLinks((prev) =>
           prev.map((l) => (l.id === linkId ? { ...l, revokedAt: new Date().toISOString() } : l)),
         );
+        if (linkId in cachedUrls) {
+          const next = { ...cachedUrls };
+          delete next[linkId];
+          setCachedUrls(next);
+          writeCachedUrls(quizId, next);
+        }
       } catch (cause) {
         setError(errorMessage(cause, "Could not revoke this link"));
       }
@@ -71,7 +118,11 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
             </code>
             <CopyButton value={justCreated.url} />
           </div>
-          <p className="mt-1 text-xs">This is the only time the link is shown.</p>
+          <p className="mt-1 text-xs">
+            The server only shows this once, but you can still copy it again later from this
+            browser — from a different device or after clearing site data, create a new link
+            instead.
+          </p>
         </Alert>
       ) : null}
 
@@ -119,9 +170,14 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
                   </TD>
                   <TD align="right">
                     {!link.revokedAt ? (
-                      <Button variant="danger" size="sm" disabled={pending} onClick={() => revoke(link.id)}>
-                        Revoke
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        {cachedUrls[link.id] ? (
+                          <CopyButton value={cachedUrls[link.id]} label="Copy" variant="secondary" />
+                        ) : null}
+                        <Button variant="danger" size="sm" disabled={pending} onClick={() => revoke(link.id)}>
+                          Revoke
+                        </Button>
+                      </div>
                     ) : null}
                   </TD>
                 </TR>

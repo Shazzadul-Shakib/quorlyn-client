@@ -5,6 +5,7 @@ import Link from "next/link";
 import { acceptInviteAction, type AuthFormState } from "../actions";
 import { Alert } from "@/components/ui/alert";
 import { Field, Input } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { InvitePreview } from "@/types/api";
 
@@ -51,10 +52,9 @@ export function AcceptInviteForm({
         }
         required
       >
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           minLength={8}
           required
           autoComplete={preview.accountExists ? "current-password" : "new-password"}

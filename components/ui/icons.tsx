@@ -108,6 +108,9 @@ export const IconRefresh = (p: IconProps) => (
 export const IconEye = (p: IconProps) => (
   <Icon {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></Icon>
 );
+export const IconEyeOff = (p: IconProps) => (
+  <Icon {...p}><path d="M3 3l18 18" /><path d="M10.6 5.6A10.6 10.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C4 8.3 2.5 12 2.5 12S6 18.5 12 18.5a9.7 9.7 0 0 0 4.4-1" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></Icon>
+);
 export const IconHome = (p: IconProps) => (
   <Icon {...p}><path d="M4 11.5 12 4l8 7.5" /><path d="M6 10v10h12V10" /><path d="M10 20v-6h4v6" /></Icon>
 );
@@ -122,4 +125,7 @@ export const IconArrowUp = (p: IconProps) => (
 );
 export const IconArrowDown = (p: IconProps) => (
   <Icon {...p}><path d="M12 4v16m0 0 6-6m-6 6-6-6" /></Icon>
+);
+export const IconFunction = (p: IconProps) => (
+  <Icon {...p}><path d="M18 4H7.5A2.5 2.5 0 0 0 5 6.5V20M9 13H4M15 8l6 8m0-8-6 8" /></Icon>
 );

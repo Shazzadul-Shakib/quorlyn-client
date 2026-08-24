@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     redirect("/select-organization");
   }
 
-  const sections = buildNavSections(me.user, me.org);
+  const sections = buildNavSections(me.user, me.org, me.memberships);
 
   return (
     <ShellChrome user={me.user} org={me.org} memberships={me.memberships} sections={sections}>

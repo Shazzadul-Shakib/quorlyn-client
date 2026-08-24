@@ -3,9 +3,9 @@ import Link from "next/link";
 import { getMe } from "@/features/auth/me";
 import { requireOrgPermission } from "@/features/shell/guard";
 import { listQuizzes } from "@/features/quizzes/api";
-import { CreateQuizForm } from "@/features/quizzes/components/create-quiz-form";
+import { CreateQuizModal } from "@/features/quizzes/components/create-quiz-modal";
 import { PageHeader, EmptyState } from "@/components/ui/page";
-import { Card, CardHeader, CardBody } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
 import { Paginator } from "@/components/ui/paginator";
 import { QuizStatusBadge } from "@/components/quiz-status-badge";
@@ -51,17 +51,11 @@ export default async function QuizzesPage(props: PageProps<"/app/quizzes">) {
 
   return (
     <>
-      <PageHeader title="Quizzes" description={`${total} quiz${total === 1 ? "" : "zes"}.`} />
-
-      <Card>
-        <CardHeader
-          title="Create a quiz"
-          description="Add questions, options, and formulas on the next page."
-        />
-        <CardBody>
-          <CreateQuizForm />
-        </CardBody>
-      </Card>
+      <PageHeader
+        title="Quizzes"
+        description={`${total} quiz${total === 1 ? "" : "zes"}.`}
+        actions={<CreateQuizModal />}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">

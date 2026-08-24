@@ -179,14 +179,17 @@ export function QuestionForm({
                 className="accent-primary mt-2.5 h-4 w-4 shrink-0"
                 aria-label="Mark as correct"
               />
-              <Input
-                value={option.text}
-                onChange={(event) => updateOptionText(option.key, event.target.value)}
-                disabled={type === "TRUE_FALSE"}
-                placeholder="Option text"
-                aria-label="Option text"
-                className="flex-1"
-              />
+              <div className="min-w-0 flex-1">
+                <ContentEditor
+                  id={`q-option-${option.key}`}
+                  ariaLabel="Option text"
+                  value={option.text}
+                  onChange={(text) => updateOptionText(option.key, text)}
+                  disabled={type === "TRUE_FALSE"}
+                  placeholder="Option text"
+                  compact
+                />
+              </div>
               {type !== "TRUE_FALSE" ? (
                 <Button
                   type="button"
@@ -195,6 +198,7 @@ export function QuestionForm({
                   onClick={() => removeOption(option.key)}
                   disabled={options.length <= 2}
                   aria-label="Remove option"
+                  className="mt-0.5 shrink-0"
                 >
                   <IconTrash />
                 </Button>
