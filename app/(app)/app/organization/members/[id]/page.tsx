@@ -13,17 +13,15 @@ import { ApiError } from "@/lib/api/errors";
 export const metadata: Metadata = { title: "Edit member" };
 
 export default async function MemberEditPage(props: PageProps<"/app/organization/members/[id]">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_MEMBERS");
-
   const { id } = await props.params;
-  let member;
+  let me, member;
   try {
-    member = await getMember(id);
+    [me, member] = await Promise.all([getMe(), getMember(id)]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
+  requireOrgPermission(me.org, "MANAGE_MEMBERS");
 
   // Students have nothing here — no owner flag, no permissions — and status
   // now toggles inline from the members table.

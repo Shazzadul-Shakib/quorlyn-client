@@ -1,18 +1,28 @@
 "use client";
 
-import { RenderedContent } from "@/components/math/rendered-content";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { ExamQuestion } from "@/types/api";
 import type { SaveStatus } from "../use-exam-runner";
 
+/** Rendered server-side by the caller and passed down — see the comment on
+ * `RenderedContent` for why this "use client" component can't call it
+ * directly without shipping MathLive's LaTeX engine to every student. */
+export type ExamQuestionContent = {
+  promptContent: ReactNode;
+  optionContent: Record<string, ReactNode>;
+};
+
 export function ExamQuestionCard({
   question,
+  content,
   index,
   selected,
   onChange,
   status,
 }: {
   question: ExamQuestion;
+  content: ExamQuestionContent;
   index: number;
   selected: string[];
   onChange: (selectedOptionIds: string[]) => void;
@@ -40,9 +50,7 @@ export function ExamQuestionCard({
         <SaveIndicator status={status} />
       </div>
 
-      <div className="text-lg">
-        <RenderedContent value={question.prompt} format={question.contentFormat} />
-      </div>
+      <div className="text-lg">{content.promptContent}</div>
 
       {multi ? (
         <p className="text-fg-subtle text-xs">Select every correct answer — partial credit is not given.</p>
@@ -67,7 +75,7 @@ export function ExamQuestionCard({
                 onChange={() => toggle(option.id)}
                 className="accent-primary mt-1 h-4 w-4 shrink-0"
               />
-              <RenderedContent value={option.text} format={question.contentFormat} />
+              {content.optionContent[option.id]}
             </label>
           );
         })}

@@ -24,13 +24,14 @@ const ROLE_FILTERS: { label: string; value: OrgRole | undefined }[] = [
 ];
 
 export default async function MembersPage(props: PageProps<"/app/organization/members">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_MEMBERS");
-
   const { role: roleParam, page: pageParam } = await props.searchParams;
   const role = roleParam === "TEACHER" || roleParam === "STUDENT" ? roleParam : undefined;
   const page = Math.max(1, Number(pageParam) || 1);
-  const { items, total } = await listMembers({ role, page, limit: PAGE_SIZE });
+  const [me, { items, total }] = await Promise.all([
+    getMe(),
+    listMembers({ role, page, limit: PAGE_SIZE }),
+  ]);
+  requireOrgPermission(me.org, "MANAGE_MEMBERS");
 
   return (
     <>

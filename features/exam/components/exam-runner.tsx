@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useExamRunner } from "../use-exam-runner";
 import { CountdownBadge } from "./countdown-badge";
 import { QuestionNav } from "./question-nav";
-import { ExamQuestionCard } from "./exam-question-card";
+import { ExamQuestionCard, type ExamQuestionContent } from "./exam-question-card";
 import { ResultScreen } from "./result-screen";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
@@ -16,9 +16,11 @@ import type { ExamState } from "@/types/api";
 
 export function ExamRunner({
   initial,
+  content,
   attemptsLeftLabel,
 }: {
   initial: ExamState;
+  content: Record<string, ExamQuestionContent>;
   attemptsLeftLabel?: string;
 }) {
   const runner = useExamRunner(initial);
@@ -26,6 +28,7 @@ export function ExamRunner({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const confirm = useConfirm();
+  const questionTopRef = useRef<HTMLDivElement>(null);
 
   const questionIds = useMemo(() => runner.questions.map((q) => q.id), [runner.questions]);
   const answeredIndex = useMemo(() => {
@@ -35,6 +38,19 @@ export function ExamRunner({
     });
     return set;
   }, [runner.questions, runner.answers]);
+
+  // Jumps to the top of the question card on every Next/Previous/nav-dot
+  // switch, so a long question or a small viewport doesn't leave the
+  // student scrolled mid-page into the newly shown question. Skipped on the
+  // very first render — the page is already at the top then.
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    questionTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [index]);
 
   if (runner.attempt.status === "SUBMITTED") {
     return <ResultScreen attempt={runner.attempt} attemptsLeftLabel={attemptsLeftLabel} />;
@@ -123,17 +139,20 @@ export function ExamRunner({
           onSelect={goTo}
         />
 
-        <Card>
-          <CardBody className="space-y-6 p-6">
-            <ExamQuestionCard
-              question={current}
-              index={index}
-              selected={runner.answers[current.id] ?? []}
-              onChange={(ids) => runner.setAnswer(current.id, ids)}
-              status={runner.saveStatus[current.id]}
-            />
-          </CardBody>
-        </Card>
+        <div ref={questionTopRef} className="scroll-mt-20">
+          <Card>
+            <CardBody className="space-y-6 p-6">
+              <ExamQuestionCard
+                question={current}
+                content={content[current.id]}
+                index={index}
+                selected={runner.answers[current.id] ?? []}
+                onChange={(ids) => runner.setAnswer(current.id, ids)}
+                status={runner.saveStatus[current.id]}
+              />
+            </CardBody>
+          </Card>
+        </div>
 
         <div className="flex items-center justify-between gap-3">
           <Button variant="secondary" onClick={() => goTo(index - 1)} disabled={index === 0}>

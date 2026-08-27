@@ -42,15 +42,13 @@ const STATUS_FILTERS: { label: string; value: InviteStatus | undefined }[] = [
 ];
 
 export default async function InvitesPage(props: PageProps<"/app/organization/invites">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_MEMBERS");
-
   const { status: statusParam, page: pageParam } = await props.searchParams;
   const status = STATUS_FILTERS.some((f) => f.value === statusParam)
     ? (statusParam as InviteStatus)
     : undefined;
   const page = Math.max(1, Number(pageParam) || 1);
-  const items = await listInvites({ status, page, limit: PAGE_SIZE });
+  const [me, items] = await Promise.all([getMe(), listInvites({ status, page, limit: PAGE_SIZE })]);
+  requireOrgPermission(me.org, "MANAGE_MEMBERS");
 
   return (
     <>

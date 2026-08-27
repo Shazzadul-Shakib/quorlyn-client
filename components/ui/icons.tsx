@@ -90,9 +90,6 @@ export const IconMail = (p: IconProps) => (
 export const IconShield = (p: IconProps) => (
   <Icon {...p}><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" /></Icon>
 );
-export const IconPlay = (p: IconProps) => (
-  <Icon {...p}><path d="M8 5.5v13l11-6.5-11-6.5Z" /></Icon>
-);
 export const IconTrophy = (p: IconProps) => (
   <Icon {...p}><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 20h6M12 14v6" /></Icon>
 );
@@ -101,9 +98,6 @@ export const IconSearch = (p: IconProps) => (
 );
 export const IconMenu = (p: IconProps) => (
   <Icon {...p}><path d="M4 7h16M4 12h16M4 17h16" /></Icon>
-);
-export const IconRefresh = (p: IconProps) => (
-  <Icon {...p}><path d="M20 11a8 8 0 1 0-1.5 6" /><path d="M20 5v6h-6" /></Icon>
 );
 export const IconEye = (p: IconProps) => (
   <Icon {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></Icon>
@@ -116,9 +110,6 @@ export const IconHome = (p: IconProps) => (
 );
 export const IconSettings = (p: IconProps) => (
   <Icon {...p}><circle cx="12" cy="12" r="3.2" /><path d="M12 3.5v2.2M12 18.3v2.2M4.6 7l1.9 1.1M17.5 15.9l1.9 1.1M3.5 12h2.2M18.3 12h2.2M4.6 17l1.9-1.1M17.5 8.1l1.9-1.1" /></Icon>
-);
-export const IconLayers = (p: IconProps) => (
-  <Icon {...p}><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 13 9 5 9-5" /></Icon>
 );
 export const IconArrowUp = (p: IconProps) => (
   <Icon {...p}><path d="M12 20V4m0 0-6 6m6-6 6 6" /></Icon>

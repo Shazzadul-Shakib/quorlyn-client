@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition, type ReactNode } from "react";
 import { deleteQuestionAction, reorderQuestionsAction } from "../actions";
 import { QuestionForm } from "./question-form";
-import { RenderedContent } from "@/components/math/rendered-content";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,13 +27,21 @@ const TYPE_LABEL: Record<QuestionType, string> = {
   TRUE_FALSE: "True / False",
 };
 
+/** `promptContent`/`optionContent` are rendered server-side by the caller —
+ * see the comment on `RenderedContent` for why this component (which needs
+ * "use client" for editing/reordering) can't call it directly. */
+export type QuestionListItem = AnswerKeyQuestion & {
+  promptContent: ReactNode;
+  optionContent: Record<string, ReactNode>;
+};
+
 export function QuestionList({
   quizId,
   questions,
   editable,
 }: {
   quizId: string;
-  questions: AnswerKeyQuestion[];
+  questions: QuestionListItem[];
   editable: boolean;
 }) {
   const [adding, setAdding] = useState(false);
@@ -44,14 +51,24 @@ export function QuestionList({
   const toast = useToast();
 
   const sorted = questions.slice().sort((a, b) => a.position - b.position);
+  // Reflects a reorder the instant a button is clicked, rather than waiting
+  // for the round trip through the Server Action and `revalidatePath` — it
+  // automatically reverts to `sorted`'s own order if the action throws,
+  // since that base value never actually changed.
+  const [optimisticOrder, setOptimisticOrder] = useOptimistic(sorted.map((q) => q.id));
+  const byId = new Map(sorted.map((q) => [q.id, q]));
+  const ordered = optimisticOrder
+    .map((id) => byId.get(id))
+    .filter((q): q is QuestionListItem => q !== undefined);
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
-    if (target < 0 || target >= sorted.length) return;
-    const ids = sorted.map((q) => q.id);
+    if (target < 0 || target >= optimisticOrder.length) return;
+    const ids = optimisticOrder.slice();
     const [moved] = ids.splice(index, 1);
     ids.splice(target, 0, moved);
     startTransition(async () => {
+      setOptimisticOrder(ids);
       try {
         await reorderQuestionsAction(quizId, ids);
       } catch (cause) {
@@ -78,7 +95,7 @@ export function QuestionList({
 
   return (
     <div className="space-y-4">
-      {sorted.length === 0 && !adding ? (
+      {ordered.length === 0 && !adding ? (
         <Card>
           <div className="p-5">
             <EmptyState
@@ -89,7 +106,7 @@ export function QuestionList({
           </div>
         </Card>
       ) : (
-        sorted.map((question, index) => (
+        ordered.map((question, index) => (
           <Card key={question.id}>
             {editingId === question.id ? (
               <CardBody>
@@ -125,7 +142,7 @@ export function QuestionList({
                         variant="ghost"
                         size="icon"
                         aria-label="Move down"
-                        disabled={index === sorted.length - 1 || pending}
+                        disabled={index === ordered.length - 1 || pending}
                         onClick={() => move(index, 1)}
                       >
                         <IconArrowDown />
@@ -151,7 +168,7 @@ export function QuestionList({
                   ) : null}
                 </div>
 
-                <RenderedContent value={question.prompt} format={question.contentFormat} />
+                {question.promptContent}
 
                 <ul className="space-y-1.5">
                   {question.options
@@ -165,7 +182,7 @@ export function QuestionList({
                             option.isCorrect ? "bg-success" : "bg-border-strong",
                           )}
                         />
-                        <RenderedContent value={option.text} format={question.contentFormat} />
+                        {question.optionContent[option.id]}
                       </li>
                     ))}
                 </ul>

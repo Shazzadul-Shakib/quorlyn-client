@@ -6,8 +6,13 @@ import { requireOrgPermission } from "@/features/shell/guard";
 import { getQuiz } from "@/features/quizzes/api";
 import { getLeaderboard, getQuizDashboard, listAttempts } from "@/features/results/api";
 import { ScoreDistributionChart } from "@/features/results/components/score-distribution-chart";
-import { QuestionDifficultyList } from "@/features/results/components/question-difficulty-list";
+
+import {
+  QuestionDifficultyList,
+  type QuestionDifficultyRow,
+} from "@/features/results/components/question-difficulty-list";
 import { SubmissionCauses } from "@/features/results/components/submission-causes";
+import { RenderedContent } from "@/components/math/rendered-content";
 import { PageHeader, Stat, EmptyState } from "@/components/ui/page";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Table, THead, TH, TBody, TR, TD } from "@/components/ui/table";
@@ -29,13 +34,16 @@ const CAUSE_LABEL: Record<SubmissionCause, string> = {
 };
 
 export default async function QuizResultsPage(props: PageProps<"/app/quizzes/[id]/results">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "VIEW_RESULTS");
-
   const { id } = await props.params;
-  let quiz, dashboard, attempts, leaderboard;
+  // `getMe()` only needs the session cookie, same as the other four calls
+  // below — none of them depend on each other's result, so they run
+  // concurrently rather than paying for `getMe()`'s round trip up front.
+  // The permission gate still runs before anything renders; a denied
+  // request just means the other four calls' results go unused.
+  let me, quiz, dashboard, attempts, leaderboard;
   try {
-    [quiz, dashboard, attempts, leaderboard] = await Promise.all([
+    [me, quiz, dashboard, attempts, leaderboard] = await Promise.all([
+      getMe(),
       getQuiz(id),
       getQuizDashboard(id),
       listAttempts(id, 1, 20),
@@ -45,6 +53,17 @@ export default async function QuizResultsPage(props: PageProps<"/app/quizzes/[id
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
+  requireOrgPermission(me.org, "VIEW_RESULTS");
+
+  const difficultyRows: QuestionDifficultyRow[] = dashboard.questionDifficulty.map((question) => ({
+    ...question,
+    promptContent: (
+      <RenderedContent
+        value={question.prompt}
+        format={question.prompt.includes("$") ? "LATEX_MIXED" : "PLAIN"}
+      />
+    ),
+  }));
 
   return (
     <>
@@ -94,10 +113,10 @@ export default async function QuizResultsPage(props: PageProps<"/app/quizzes/[id
       <Card>
         <CardHeader title="Question difficulty" description="Sorted hardest first." />
         <CardBody>
-          {dashboard.questionDifficulty.length === 0 ? (
+          {difficultyRows.length === 0 ? (
             <p className="text-fg-subtle text-sm">No answered questions yet.</p>
           ) : (
-            <QuestionDifficultyList questions={dashboard.questionDifficulty} />
+            <QuestionDifficultyList questions={difficultyRows} />
           )}
         </CardBody>
       </Card>

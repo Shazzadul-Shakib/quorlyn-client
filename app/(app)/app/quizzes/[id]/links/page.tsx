@@ -12,18 +12,15 @@ import { ApiError } from "@/lib/api/errors";
 export const metadata: Metadata = { title: "Links" };
 
 export default async function QuizLinksPage(props: PageProps<"/app/quizzes/[id]/links">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_QUIZZES");
-
   const { id } = await props.params;
-  let quiz;
-  let links;
+  let me, quiz, links;
   try {
-    [quiz, links] = await Promise.all([getQuiz(id), listLinks(id)]);
+    [me, quiz, links] = await Promise.all([getMe(), getQuiz(id), listLinks(id)]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
+  requireOrgPermission(me.org, "MANAGE_QUIZZES");
 
   return (
     <>

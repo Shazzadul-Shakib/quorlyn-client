@@ -20,15 +20,14 @@ const PAGE_SIZE = 20;
 export default async function AdminOrganizationsPage(
   props: PageProps<"/app/admin/organizations">,
 ) {
-  const me = await getMe();
-  requireSuperadmin(me.user);
-
   const { page: pageParam } = await props.searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const [{ items, total }, stats] = await Promise.all([
+  const [me, { items, total }, stats] = await Promise.all([
+    getMe(),
     listOrganizations(page, PAGE_SIZE),
     getPlatformStats(),
   ]);
+  requireSuperadmin(me.user);
 
   return (
     <>
