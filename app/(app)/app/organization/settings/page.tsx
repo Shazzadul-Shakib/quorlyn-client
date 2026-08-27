@@ -10,10 +10,8 @@ import { Card, CardHeader, CardBody } from "@/components/ui/card";
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function OrganizationSettingsPage() {
-  const me = await getMe();
+  const [me, organization] = await Promise.all([getMe(), getCurrentOrganization()]);
   requireOrgPermission(me.org, "MANAGE_ORGANIZATION");
-
-  const organization = await getCurrentOrganization();
 
   return (
     <>

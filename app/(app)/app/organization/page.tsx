@@ -8,9 +8,11 @@ import { PageHeader } from "@/components/ui/page";
 export const metadata: Metadata = { title: "Overview" };
 
 export default async function OrganizationOverviewPage() {
-  const me = await getMe();
+  // Both calls only need the session cookie, not each other's result, so
+  // they run concurrently rather than paying for `getMe()`'s round trip
+  // before the dashboard fetch starts.
+  const [me, dashboard] = await Promise.all([getMe(), getOrganizationDashboard()]);
   requireOrgPermission(me.org, ["VIEW_RESULTS", "MANAGE_ORGANIZATION"]);
-  const dashboard = await getOrganizationDashboard();
 
   return (
     <>

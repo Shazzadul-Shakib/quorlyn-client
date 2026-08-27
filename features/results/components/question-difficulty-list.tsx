@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { IconTable } from "@/components/ui/icons";
-import { RenderedContent } from "@/components/math/rendered-content";
 import { cn, percent } from "@/lib/utils";
 import type { QuestionDifficulty } from "@/types/api";
 
@@ -12,7 +11,11 @@ function toneFor(correctRate: number): keyof typeof TONE_BG {
   return correctRate < 0.5 ? "danger" : correctRate < 0.75 ? "warning" : "success";
 }
 
-export function QuestionDifficultyList({ questions }: { questions: QuestionDifficulty[] }) {
+/** `promptContent` is rendered server-side by the caller — see the comment
+ * on `RenderedContent` for why this can't call it directly here. */
+export type QuestionDifficultyRow = QuestionDifficulty & { promptContent: ReactNode };
+
+export function QuestionDifficultyList({ questions }: { questions: QuestionDifficultyRow[] }) {
   const [tableView, setTableView] = useState(false);
   const sorted = questions.slice().sort((a, b) => a.correctRate - b.correctRate);
 
@@ -49,10 +52,7 @@ export function QuestionDifficultyList({ questions }: { questions: QuestionDiffi
               <tr key={question.questionId}>
                 <td className="text-fg px-2 py-1.5">
                   <span className="text-fg-subtle mr-1.5 text-xs">Q{question.position}</span>
-                  <RenderedContent
-                    value={question.prompt}
-                    format={question.prompt.includes("$") ? "LATEX_MIXED" : "PLAIN"}
-                  />
+                  {question.promptContent}
                 </td>
                 <td className="text-fg px-2 py-1.5 text-right tabular-nums">{percent(question.correctRate)}</td>
                 <td className="text-fg px-2 py-1.5 text-right tabular-nums">{question.answered}</td>
@@ -69,12 +69,7 @@ export function QuestionDifficultyList({ questions }: { questions: QuestionDiffi
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <span className="text-fg-subtle text-xs">Q{question.position}</span>
-                    <div className="text-fg-muted line-clamp-2 text-sm">
-                      <RenderedContent
-                        value={question.prompt}
-                        format={question.prompt.includes("$") ? "LATEX_MIXED" : "PLAIN"}
-                      />
-                    </div>
+                    <div className="text-fg-muted line-clamp-2 text-sm">{question.promptContent}</div>
                   </div>
                   <span className="text-fg-subtle shrink-0 text-xs tabular-nums">
                     {percent(question.correctRate)} · {question.answered} answered

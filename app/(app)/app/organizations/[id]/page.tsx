@@ -24,14 +24,13 @@ export default async function StudentOrganizationPage(
   props: PageProps<"/app/organizations/[id]">,
 ) {
   const { id } = await props.params;
-  const me = await getMe();
-  const membership = me.memberships.find((m) => m.organizationId === id && m.role === "STUDENT");
-  if (!membership) notFound();
-
-  const [dashboard, attempts] = await Promise.all([
+  const [me, dashboard, attempts] = await Promise.all([
+    getMe(),
     getStudentDashboard(),
     getStudentAttempts(1, 50),
   ]);
+  const membership = me.memberships.find((m) => m.organizationId === id && m.role === "STUDENT");
+  if (!membership) notFound();
 
   const entries = dashboard.progress.filter((entry) => entry.organizationId === id);
   const quizIds = new Set(entries.map((entry) => entry.quizId));

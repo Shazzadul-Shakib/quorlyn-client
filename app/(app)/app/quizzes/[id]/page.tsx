@@ -6,7 +6,8 @@ import { requireOrgPermission } from "@/features/shell/guard";
 import { getQuiz, getQuestions } from "@/features/quizzes/api";
 import { QuizSettingsForm } from "@/features/quizzes/components/quiz-settings-form";
 import { QuizLifecycleActions } from "@/features/quizzes/components/quiz-lifecycle-actions";
-import { QuestionList } from "@/features/quizzes/components/question-list";
+import { QuestionList, type QuestionListItem } from "@/features/quizzes/components/question-list";
+import { RenderedContent } from "@/components/math/rendered-content";
 import { PageHeader } from "@/components/ui/page";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { QuizStatusBadge } from "@/components/quiz-status-badge";
@@ -17,18 +18,29 @@ import { ApiError } from "@/lib/api/errors";
 export const metadata: Metadata = { title: "Quiz" };
 
 export default async function QuizEditorPage(props: PageProps<"/app/quizzes/[id]">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_QUIZZES");
-
   const { id } = await props.params;
-  let quiz;
-  let questions;
+  // `getMe()`, `getQuiz()`, and `getQuestions()` each only need the session
+  // cookie — none depends on another's result — so they run concurrently
+  // instead of paying for `getMe()`'s round trip before the other two start.
+  let me, quiz, questions;
   try {
-    [quiz, questions] = await Promise.all([getQuiz(id), getQuestions(id)]);
+    [me, quiz, questions] = await Promise.all([getMe(), getQuiz(id), getQuestions(id)]);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
+  requireOrgPermission(me.org, "MANAGE_QUIZZES");
+
+  const questionRows: QuestionListItem[] = questions.map((question) => ({
+    ...question,
+    promptContent: <RenderedContent value={question.prompt} format={question.contentFormat} />,
+    optionContent: Object.fromEntries(
+      question.options.map((option) => [
+        option.id,
+        <RenderedContent key={option.id} value={option.text} format={question.contentFormat} />,
+      ]),
+    ),
+  }));
 
   return (
     <>
@@ -78,7 +90,7 @@ export default async function QuizEditorPage(props: PageProps<"/app/quizzes/[id]
             </p>
           ) : null}
         </div>
-        <QuestionList quizId={quiz.id} questions={questions} editable={quiz.status === "DRAFT"} />
+        <QuestionList quizId={quiz.id} questions={questionRows} editable={quiz.status === "DRAFT"} />
       </div>
     </>
   );

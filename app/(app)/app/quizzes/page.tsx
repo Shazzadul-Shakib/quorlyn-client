@@ -26,16 +26,17 @@ const STATUS_FILTERS: { label: string; value: QuizStatus | undefined }[] = [
 ];
 
 export default async function QuizzesPage(props: PageProps<"/app/quizzes">) {
-  const me = await getMe();
-  requireOrgPermission(me.org, "MANAGE_QUIZZES");
-
   const { status: statusParam, mine: mineParam, page: pageParam } = await props.searchParams;
   const status = STATUS_FILTERS.some((f) => f.value === statusParam)
     ? (statusParam as QuizStatus)
     : undefined;
   const mine = mineParam === "true";
   const page = Math.max(1, Number(pageParam) || 1);
-  const { items, total } = await listQuizzes({ status, mine, page, limit: PAGE_SIZE });
+  const [me, { items, total }] = await Promise.all([
+    getMe(),
+    listQuizzes({ status, mine, page, limit: PAGE_SIZE }),
+  ]);
+  requireOrgPermission(me.org, "MANAGE_QUIZZES");
 
   const queryFor = (overrides: { status?: QuizStatus; mine?: boolean; page?: number }) => {
     const params = new URLSearchParams();
