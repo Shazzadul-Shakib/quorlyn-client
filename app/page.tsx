@@ -76,7 +76,7 @@ export default function LandingPage() {
           {FEATURES.map(({ icon: Glyph, title, body }) => (
             <article
               key={title}
-              className="border-border bg-surface rounded-card border p-4 shadow-sm"
+              className="border-border bg-surface rounded-card border p-4"
             >
               <span className="bg-primary-soft text-primary inline-flex rounded-md p-2">
                 <Glyph />

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateDraftSettingsAction, updatePublishedSettingsAction, type FormState } from "../actions";
 import { Field, Input, Select, Textarea, Checkbox } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 import type { Quiz } from "@/types/api";
 
 const INITIAL: FormState = {};
@@ -22,6 +23,12 @@ export function QuizSettingsForm({ quiz }: { quiz: Quiz }) {
     ? updateDraftSettingsAction.bind(null, quiz.id)
     : updatePublishedSettingsAction.bind(null, quiz.id);
   const [state, formAction] = useActionState(action, INITIAL);
+  // Controlled only so a *set* opens/closes-at date can be forced back to
+  // full contrast — the browser dims a datetime-local's whole editable
+  // region by default (see globals.css) since it can't otherwise tell "no
+  // date chosen" from "a date is chosen" text apart when unfocused.
+  const [opensAt, setOpensAt] = useState(() => toLocalInput(quiz.opensAt));
+  const [closesAt, setClosesAt] = useState(() => toLocalInput(quiz.closesAt));
 
   return (
     <form action={formAction} className="space-y-5">
@@ -66,10 +73,24 @@ export function QuizSettingsForm({ quiz }: { quiz: Quiz }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Opens at" htmlFor="opensAt" hint="When the quiz starts accepting sittings.">
-          <Input id="opensAt" name="opensAt" type="datetime-local" defaultValue={toLocalInput(quiz.opensAt)} />
+          <Input
+            id="opensAt"
+            name="opensAt"
+            type="datetime-local"
+            value={opensAt}
+            onChange={(event) => setOpensAt(event.target.value)}
+            className={cn(opensAt && "[&::-webkit-datetime-edit]:text-fg")}
+          />
         </Field>
         <Field label="Closes at" htmlFor="closesAt" hint="When the quiz stops accepting sittings.">
-          <Input id="closesAt" name="closesAt" type="datetime-local" defaultValue={toLocalInput(quiz.closesAt)} />
+          <Input
+            id="closesAt"
+            name="closesAt"
+            type="datetime-local"
+            value={closesAt}
+            onChange={(event) => setClosesAt(event.target.value)}
+            className={cn(closesAt && "[&::-webkit-datetime-edit]:text-fg")}
+          />
         </Field>
       </div>
 

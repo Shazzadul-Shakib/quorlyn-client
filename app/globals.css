@@ -16,37 +16,37 @@
    ========================================================================== */
 
 :root {
-  /* surfaces */
-  --canvas: oklch(98.2% 0.006 200);
+  /* surfaces — a true, barely-tinted graphite neutral rather than a
+     colour-tinted slate; flat and quiet so borders (not shadows) carry
+     definition on static surfaces. */
+  --canvas: oklch(98.3% 0.003 220);
   --surface: oklch(100% 0 0);
-  --surface-2: oklch(96.5% 0.007 200);
-  --surface-3: oklch(93.5% 0.009 200);
-  --overlay: oklch(22% 0.02 200 / 0.45);
+  --surface-2: oklch(96.8% 0.004 220);
+  --surface-3: oklch(93.8% 0.005 220);
+  --overlay: oklch(20% 0.01 220 / 0.45);
 
   /* lines */
-  --border: oklch(90% 0.009 200);
-  --border-strong: oklch(82% 0.013 200);
+  --border: oklch(89% 0.006 220);
+  --border-strong: oklch(80% 0.008 220);
 
   /* text */
-  --fg: oklch(20% 0.02 200);
-  --fg-muted: oklch(48% 0.02 200);
-  --fg-subtle: oklch(62% 0.017 200);
+  --fg: oklch(18% 0.008 220);
+  --fg-muted: oklch(46% 0.01 220);
+  --fg-subtle: oklch(60% 0.01 220);
   --fg-inverted: oklch(99% 0 0);
 
-  /* brand — teal-green */
-  --primary: oklch(46% 0.13 172);
-  --primary-hover: oklch(40% 0.13 172);
-  --primary-active: oklch(35% 0.12 172);
+  /* brand — teal-green, muted and grounded rather than bright/minty */
+  --primary: oklch(38% 0.085 172);
+  --primary-hover: oklch(33% 0.085 172);
+  --primary-active: oklch(29% 0.08 172);
   --primary-fg: oklch(99% 0 0);
-  --primary-soft: oklch(93% 0.045 172);
-  --primary-border: oklch(82% 0.09 172);
+  --primary-soft: oklch(93% 0.035 172);
+  --primary-border: oklch(80% 0.06 172);
 
-  /* accent — amber, the gradient's other stop */
+  /* accent — amber, reserved for badges/highlights; not part of brand chrome */
   --accent: oklch(54% 0.16 45);
   --accent-fg: oklch(30% 0.11 45);
   --accent-soft: oklch(95% 0.05 45);
-
-  --gradient-brand: linear-gradient(135deg, oklch(46% 0.14 172) 0%, oklch(54% 0.16 45) 100%);
 
   /* status */
   --success: oklch(50% 0.15 145);
@@ -66,13 +66,13 @@
   --info-fg: oklch(40% 0.12 245);
   --info-soft: oklch(95% 0.035 245);
 
-  --neutral-fg: oklch(42% 0.015 200);
-  --neutral-soft: oklch(93% 0.006 200);
+  --neutral-fg: oklch(40% 0.008 220);
+  --neutral-soft: oklch(93% 0.004 220);
 
   /* exam runner */
-  --exam-canvas: oklch(96% 0.008 200);
+  --exam-canvas: oklch(96.5% 0.005 220);
   --exam-surface: oklch(100% 0 0);
-  --timer-calm: oklch(46% 0.13 172);
+  --timer-calm: oklch(38% 0.085 172);
   --timer-warn: oklch(64% 0.16 74);
   --timer-critical: oklch(54% 0.21 20);
 
@@ -85,40 +85,38 @@
   --chart-3: oklch(48% 0.17 150);
   --chart-4: oklch(55% 0.16 280);
   --chart-5: oklch(58% 0.18 340);
-  --chart-track: oklch(92% 0.008 200);
+  --chart-track: oklch(92% 0.005 220);
 
   /* focus */
-  --ring: oklch(46% 0.13 172 / 0.5);
+  --ring: oklch(44% 0.09 172 / 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --canvas: oklch(11% 0.014 200);
-    --surface: oklch(15% 0.016 200);
-    --surface-2: oklch(18.5% 0.018 200);
-    --surface-3: oklch(22.5% 0.02 200);
-    --overlay: oklch(8% 0.01 200 / 0.65);
+    --canvas: oklch(11% 0.006 220);
+    --surface: oklch(15% 0.007 220);
+    --surface-2: oklch(18.5% 0.008 220);
+    --surface-3: oklch(22.5% 0.009 220);
+    --overlay: oklch(8% 0.005 220 / 0.65);
 
-    --border: oklch(26% 0.02 200);
-    --border-strong: oklch(34% 0.024 200);
+    --border: oklch(27% 0.01 220);
+    --border-strong: oklch(35% 0.012 220);
 
-    --fg: oklch(96% 0.006 200);
-    --fg-muted: oklch(74% 0.014 200);
-    --fg-subtle: oklch(58% 0.014 200);
-    --fg-inverted: oklch(14% 0.02 200);
+    --fg: oklch(96% 0.003 220);
+    --fg-muted: oklch(74% 0.007 220);
+    --fg-subtle: oklch(58% 0.007 220);
+    --fg-inverted: oklch(14% 0.008 220);
 
-    --primary: oklch(72% 0.14 172);
-    --primary-hover: oklch(78% 0.13 172);
-    --primary-active: oklch(66% 0.14 172);
-    --primary-fg: oklch(14% 0.03 172);
-    --primary-soft: oklch(26% 0.06 172);
-    --primary-border: oklch(36% 0.09 172);
+    --primary: oklch(68% 0.1 172);
+    --primary-hover: oklch(74% 0.095 172);
+    --primary-active: oklch(62% 0.1 172);
+    --primary-fg: oklch(12% 0.02 172);
+    --primary-soft: oklch(25% 0.05 172);
+    --primary-border: oklch(34% 0.07 172);
 
     --accent: oklch(76% 0.14 45);
     --accent-fg: oklch(88% 0.1 45);
     --accent-soft: oklch(27% 0.06 45);
-
-    --gradient-brand: linear-gradient(135deg, oklch(72% 0.14 172) 0%, oklch(76% 0.14 45) 100%);
 
     --success: oklch(74% 0.15 145);
     --success-fg: oklch(87% 0.12 145);
@@ -137,12 +135,12 @@
     --info-fg: oklch(87% 0.1 245);
     --info-soft: oklch(28% 0.06 245);
 
-    --neutral-fg: oklch(78% 0.012 200);
-    --neutral-soft: oklch(25% 0.014 200);
+    --neutral-fg: oklch(78% 0.007 220);
+    --neutral-soft: oklch(25% 0.008 220);
 
-    --exam-canvas: oklch(9.5% 0.014 200);
-    --exam-surface: oklch(14.5% 0.016 200);
-    --timer-calm: oklch(72% 0.14 172);
+    --exam-canvas: oklch(9.5% 0.007 220);
+    --exam-surface: oklch(14.5% 0.007 220);
+    --timer-calm: oklch(68% 0.1 172);
     --timer-warn: oklch(80% 0.15 74);
     --timer-critical: oklch(70% 0.19 20);
 
@@ -151,39 +149,37 @@
     --chart-3: oklch(55% 0.15 150);
     --chart-4: oklch(65% 0.16 280);
     --chart-5: oklch(65% 0.17 340);
-    --chart-track: oklch(24% 0.018 200);
+    --chart-track: oklch(24% 0.01 220);
 
-    --ring: oklch(72% 0.14 172 / 0.55);
+    --ring: oklch(68% 0.1 172 / 0.55);
   }
 }
 
 .dark {
-  --canvas: oklch(11% 0.014 200);
-  --surface: oklch(15% 0.016 200);
-  --surface-2: oklch(18.5% 0.018 200);
-  --surface-3: oklch(22.5% 0.02 200);
-  --overlay: oklch(8% 0.01 200 / 0.65);
+  --canvas: oklch(11% 0.006 220);
+  --surface: oklch(15% 0.007 220);
+  --surface-2: oklch(18.5% 0.008 220);
+  --surface-3: oklch(22.5% 0.009 220);
+  --overlay: oklch(8% 0.005 220 / 0.65);
 
-  --border: oklch(26% 0.02 200);
-  --border-strong: oklch(34% 0.024 200);
+  --border: oklch(27% 0.01 220);
+  --border-strong: oklch(35% 0.012 220);
 
-  --fg: oklch(96% 0.006 200);
-  --fg-muted: oklch(74% 0.014 200);
-  --fg-subtle: oklch(58% 0.014 200);
-  --fg-inverted: oklch(14% 0.02 200);
+  --fg: oklch(96% 0.003 220);
+  --fg-muted: oklch(74% 0.007 220);
+  --fg-subtle: oklch(58% 0.007 220);
+  --fg-inverted: oklch(14% 0.008 220);
 
-  --primary: oklch(72% 0.14 172);
-  --primary-hover: oklch(78% 0.13 172);
-  --primary-active: oklch(66% 0.14 172);
-  --primary-fg: oklch(14% 0.03 172);
-  --primary-soft: oklch(26% 0.06 172);
-  --primary-border: oklch(36% 0.09 172);
+  --primary: oklch(68% 0.1 172);
+  --primary-hover: oklch(74% 0.095 172);
+  --primary-active: oklch(62% 0.1 172);
+  --primary-fg: oklch(12% 0.02 172);
+  --primary-soft: oklch(25% 0.05 172);
+  --primary-border: oklch(34% 0.07 172);
 
   --accent: oklch(76% 0.14 45);
   --accent-fg: oklch(88% 0.1 45);
   --accent-soft: oklch(27% 0.06 45);
-
-  --gradient-brand: linear-gradient(135deg, oklch(72% 0.14 172) 0%, oklch(76% 0.14 45) 100%);
 
   --success: oklch(74% 0.15 145);
   --success-fg: oklch(87% 0.12 145);
@@ -202,12 +198,12 @@
   --info-fg: oklch(87% 0.1 245);
   --info-soft: oklch(28% 0.06 245);
 
-  --neutral-fg: oklch(78% 0.012 200);
-  --neutral-soft: oklch(25% 0.014 200);
+  --neutral-fg: oklch(78% 0.007 220);
+  --neutral-soft: oklch(25% 0.008 220);
 
-  --exam-canvas: oklch(9.5% 0.014 200);
-  --exam-surface: oklch(14.5% 0.016 200);
-  --timer-calm: oklch(72% 0.14 172);
+  --exam-canvas: oklch(9.5% 0.007 220);
+  --exam-surface: oklch(14.5% 0.007 220);
+  --timer-calm: oklch(68% 0.1 172);
   --timer-warn: oklch(80% 0.15 74);
   --timer-critical: oklch(70% 0.19 20);
 
@@ -216,9 +212,9 @@
   --chart-3: oklch(55% 0.15 150);
   --chart-4: oklch(65% 0.16 280);
   --chart-5: oklch(65% 0.17 340);
-  --chart-track: oklch(24% 0.018 200);
+  --chart-track: oklch(24% 0.01 220);
 
-  --ring: oklch(72% 0.14 172 / 0.55);
+  --ring: oklch(68% 0.1 172 / 0.55);
 }
 
 /* Map the raw properties onto Tailwind's token namespace. `inline` keeps the
@@ -334,10 +330,25 @@
 }
 
 @layer components {
-  /* The one gradient in the system — the two brand hues, used only on the
-     highest-emphasis surfaces (primary buttons, the brand mark). */
-  .bg-gradient-brand {
-    background-image: var(--gradient-brand);
+  /* An empty date/time input renders its "mm/dd/yyyy, --:-- --" template as
+     ordinary text, not through `::placeholder` — confirmed empirically
+     (`:placeholder-shown` never matches it in this engine, and Chromium
+     does not expose the individual unset segments to a CSS selector either)
+     — so without this override it inherits the same full-contrast color as
+     a real value, and an empty field ends up looking identical to a filled
+     one instead of empty. `::-webkit-datetime-edit` (the whole editable
+     region) is the only reliable hook, so the whole value dims uniformly;
+     `:focus` restores full contrast for actually reading/editing it. */
+  input[type="date"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit,
+  input[type="datetime-local"]::-webkit-datetime-edit {
+    color: var(--color-fg-subtle);
+  }
+
+  input[type="date"]:focus::-webkit-datetime-edit,
+  input[type="time"]:focus::-webkit-datetime-edit,
+  input[type="datetime-local"]:focus::-webkit-datetime-edit {
+    color: var(--color-fg);
   }
 
   /* Server-rendered MathLive markup. Long formulae scroll inside their own

@@ -548,9 +548,9 @@ active owner cannot be demoted or suspended (409).
 | DELETE | `/quizzes/{id}/questions/{questionId}` | Drafts only |
 | PUT | `/quizzes/{id}/questions/order` `{ questionIds[] }` | Must list every question exactly once |
 | GET | `/quizzes/{id}/answer-key` | `VIEW_RESULTS` |
-| POST | `/quizzes/{id}/links` | Token returned **once** |
+| POST | `/quizzes/{id}/links` | Token returned **once**; 409 if the quiz already has an active link |
 | GET | `/quizzes/{id}/links` | |
-| DELETE | `/quizzes/{id}/links/{linkId}` | Revoke |
+| DELETE | `/quizzes/{id}/links/{linkId}` | Hard delete — the row is gone, not flagged |
 | GET | `/quizzes/{id}/leaderboard?page&limit` | Any member; students only if `leaderboardVisibleToStudents` |
 
 Every quiz response carries `createdByEmail` (resolved server-side from
@@ -578,6 +578,47 @@ exactly two options.
 
 **Link creation response carries `token` and `url` exactly once.** Show a
 copy-to-clipboard step there and then; it can never be retrieved again.
+
+**`QuizLinkResponseDto` carries `acceptingAttempts: boolean`** (added
+2026-08-30) — the one source of truth for whether a new attempt could start
+through this link *right now*. Use it directly for the status badge and for
+deciding whether "Create link" should be disabled; don't re-derive it from
+`expiresAt` alone. It folds in the **quiz's own** `status`/`opensAt`/
+`closesAt` as well as the link's own `expiresAt`/`maxUses` — in practice
+teachers set a deadline once, on the quiz (`closesAt`), and never touch a
+link's own `expiresAt`, so a link with `expiresAt: null` still correctly
+reads as dead once the quiz itself closes or passes `closesAt`.
+
+**Only one active link per quiz at a time** (added 2026-08-30, corrected
+2026-08-30) — `POST /quizzes/{id}/links` 409s if a link with
+`acceptingAttempts: true` already exists; the teacher deletes it, or waits
+it out, before minting another.
+
+**"Revoke" is a hard delete, not a soft flag** (changed 2026-08-30) — there
+is no `revokedAt` field on `QuizLink` any more. `DELETE
+/quizzes/{id}/links/{linkId}` removes the row outright, which is why
+`GET /quizzes/{id}/links` never returns a "revoked" link — it simply stops
+appearing. This is safe even for a link that already has attempts against
+it; those attempts keep their own record, they just lose the
+"which link" back-reference. A deleted link's token also stops being
+distinguishable from one that never existed: starting an attempt from it now
+404s ("Link not found") rather than the previous 410 ("This link has been
+revoked").
+
+**A quiz auto-closes once its own `closesAt` passes** (`PUBLISHED` →
+`CLOSED`, same effect as the teacher clicking "Close" — in-flight attempts
+get finalized with `SubmissionCause.QUIZ_CLOSED`). This runs on a 30-second
+cron sweep (`QuizClosingSweeperService`, mirroring the existing
+attempt-finalization sweeper and its ADR-0015 reasoning), not synchronously
+at the moment `closesAt` passes — so don't assume a quiz's `status` flips to
+`CLOSED` the instant its deadline arrives; it settles within roughly that
+window. (This was originally driven by a *link's* `expiresAt` instead — that
+version never actually fired, since no teacher sets a link's own expiry in
+practice, and was wrong in principle besides: an existing org member can
+start an attempt directly via `POST /quizzes/{id}/attempts` with no link
+involved, so a link expiring was never good evidence the exam itself was
+over. `closesAt` is the field that actually means that, and is now what
+drives both this sweep and `acceptingAttempts` above.)
 
 ### Attempts
 

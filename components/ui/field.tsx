@@ -7,6 +7,8 @@ import type {
 } from "react";
 import { cn } from "@/lib/utils";
 
+// date/time inputs' own empty-state dimming lives in globals.css
+// (`::-webkit-datetime-edit`) — `:placeholder-shown` does not match them.
 const CONTROL =
   "w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-sm text-fg placeholder:text-fg-subtle transition-colors focus:border-primary focus:outline-2 focus:outline-offset-1 focus:outline-ring disabled:opacity-60 disabled:bg-surface-2";
 

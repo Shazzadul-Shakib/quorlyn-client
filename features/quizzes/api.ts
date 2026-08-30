@@ -151,6 +151,6 @@ export async function createLink(
   return apiMutate<QuizLink>(`/quizzes/${quizId}/links`, { method: "POST", body: input });
 }
 
-export async function revokeLink(quizId: string, linkId: string): Promise<void> {
+export async function deleteLink(quizId: string, linkId: string): Promise<void> {
   return apiMutate<void>(`/quizzes/${quizId}/links/${linkId}`, { method: "DELETE" });
 }

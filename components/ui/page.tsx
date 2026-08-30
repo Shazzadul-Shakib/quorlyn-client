@@ -79,7 +79,7 @@ export function Stat({
   }[tone];
 
   return (
-    <div className="border-border bg-surface rounded-card border p-3.5 shadow-sm">
+    <div className="border-border bg-surface rounded-card border p-3.5">
       <p className="text-fg-muted text-[0.6875rem] font-medium tracking-wide uppercase">
         {label}
       </p>

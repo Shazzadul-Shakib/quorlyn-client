@@ -1,12 +1,13 @@
 "use client";
 
 import { useOptimistic, useState, useTransition, type ReactNode } from "react";
-import { deleteQuestionAction, reorderQuestionsAction } from "../actions";
+import { createQuestionAction, deleteQuestionAction, reorderQuestionsAction } from "../actions";
+import type { QuestionInput } from "../api";
 import { QuestionForm } from "./question-form";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/page";
+import { EmptyState, Spinner } from "@/components/ui/page";
 import {
   IconArrowUp,
   IconArrowDown,
@@ -29,11 +30,51 @@ const TYPE_LABEL: Record<QuestionType, string> = {
 
 /** `promptContent`/`optionContent` are rendered server-side by the caller —
  * see the comment on `RenderedContent` for why this component (which needs
- * "use client" for editing/reordering) can't call it directly. */
+ * "use client" for editing/reordering) can't call it directly.
+ *
+ * `pending` marks a question this component fabricated locally for the
+ * optimistic-add overlay — see `buildPendingItem` — and is never set on a
+ * question that came from the server. */
 export type QuestionListItem = AnswerKeyQuestion & {
   promptContent: ReactNode;
   optionContent: Record<string, ReactNode>;
+  pending?: boolean;
 };
+
+type OptimisticAction =
+  | { type: "reorder"; ids: string[] }
+  | { type: "add"; item: QuestionListItem };
+
+/** No server round trip yet, so no rendered math preview either — this shows
+ * the raw prompt/option text for the brief window before the real,
+ * server-rendered question (or nothing, if the save failed) replaces it. */
+function buildPendingItem(input: QuestionInput, position: number): QuestionListItem {
+  const tempId = `pending-${crypto.randomUUID()}`;
+  return {
+    id: tempId,
+    type: input.type,
+    prompt: input.prompt,
+    contentFormat: input.contentFormat,
+    points: input.points,
+    position,
+    pending: true,
+    options: input.options.map((option, index) => ({
+      id: `${tempId}-option-${index}`,
+      text: option.text,
+      isCorrect: option.isCorrect,
+      position: index,
+    })),
+    promptContent: <span className="whitespace-pre-wrap">{input.prompt}</span>,
+    optionContent: Object.fromEntries(
+      input.options.map((option, index) => [
+        `${tempId}-option-${index}`,
+        <span key={index} className="whitespace-pre-wrap">
+          {option.text}
+        </span>,
+      ]),
+    ),
+  };
+}
 
 export function QuestionList({
   quizId,
@@ -44,35 +85,57 @@ export function QuestionList({
   questions: QuestionListItem[];
   editable: boolean;
 }) {
-  const [adding, setAdding] = useState(false);
+  // A brand-new quiz has nothing else to do here, so open straight to the
+  // form instead of making the teacher click "Add question" first.
+  const [adding, setAdding] = useState(() => editable && questions.length === 0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const confirm = useConfirm();
   const toast = useToast();
 
   const sorted = questions.slice().sort((a, b) => a.position - b.position);
-  // Reflects a reorder the instant a button is clicked, rather than waiting
-  // for the round trip through the Server Action and `revalidatePath` — it
-  // automatically reverts to `sorted`'s own order if the action throws,
-  // since that base value never actually changed.
-  const [optimisticOrder, setOptimisticOrder] = useOptimistic(sorted.map((q) => q.id));
-  const byId = new Map(sorted.map((q) => [q.id, q]));
-  const ordered = optimisticOrder
-    .map((id) => byId.get(id))
-    .filter((q): q is QuestionListItem => q !== undefined);
+  // Covers both reordering and adding a question optimistically — each
+  // dispatch reflects the change the instant a button is clicked rather than
+  // waiting for the round trip through the Server Action and
+  // `revalidatePath`. It automatically reverts to `sorted` (this run's real
+  // base value) if the transition's action throws, since `sorted` itself
+  // never actually changed — that's what makes a failed add just disappear.
+  const [ordered, applyOptimistic] = useOptimistic<QuestionListItem[], OptimisticAction>(
+    sorted,
+    (state, action) => {
+      if (action.type === "add") return [...state, action.item];
+      const byId = new Map(state.map((q) => [q.id, q]));
+      return action.ids
+        .map((id) => byId.get(id))
+        .filter((q): q is QuestionListItem => q !== undefined);
+    },
+  );
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
-    if (target < 0 || target >= optimisticOrder.length) return;
-    const ids = optimisticOrder.slice();
+    if (target < 0 || target >= ordered.length) return;
+    const ids = ordered.map((q) => q.id);
     const [moved] = ids.splice(index, 1);
     ids.splice(target, 0, moved);
     startTransition(async () => {
-      setOptimisticOrder(ids);
+      applyOptimistic({ type: "reorder", ids });
       try {
         await reorderQuestionsAction(quizId, ids);
       } catch (cause) {
         toast.error(errorMessage(cause, "Could not reorder questions"));
+      }
+    });
+  }
+
+  function addQuestion(input: QuestionInput) {
+    const position = (ordered.at(-1)?.position ?? -1) + 1;
+    const item = buildPendingItem(input, position);
+    startTransition(async () => {
+      applyOptimistic({ type: "add", item });
+      try {
+        await createQuestionAction(quizId, input);
+      } catch (cause) {
+        toast.error(errorMessage(cause, "Could not save this question — it was not added."));
       }
     });
   }
@@ -95,19 +158,39 @@ export function QuestionList({
 
   return (
     <div className="space-y-4">
-      {ordered.length === 0 && !adding ? (
+      {editable ? (
+        adding ? (
+          <Card>
+            <CardBody>
+              <QuestionForm
+                quizId={quizId}
+                onAdd={addQuestion}
+                onDone={() => setAdding(false)}
+                onCancel={() => setAdding(false)}
+              />
+            </CardBody>
+          </Card>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="border-border text-fg-muted hover:border-border-strong hover:text-fg hover:bg-surface-2 flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed py-3 text-sm font-medium transition-colors"
+          >
+            <IconPlus width={16} height={16} />
+            Add question
+          </button>
+        )
+      ) : null}
+
+      {ordered.length === 0 && !editable ? (
         <Card>
           <div className="p-5">
-            <EmptyState
-              icon={<IconBook />}
-              title="No questions yet"
-              description={editable ? "Add your first question below." : undefined}
-            />
+            <EmptyState icon={<IconBook />} title="No questions yet" />
           </div>
         </Card>
       ) : (
         ordered.map((question, index) => (
-          <Card key={question.id}>
+          <Card key={question.id} className={cn(question.pending && "opacity-70")}>
             {editingId === question.id ? (
               <CardBody>
                 <QuestionForm
@@ -127,7 +210,12 @@ export function QuestionList({
                       {question.points} pt{question.points === 1 ? "" : "s"}
                     </span>
                   </div>
-                  {editable ? (
+                  {question.pending ? (
+                    <span className="text-fg-subtle flex shrink-0 items-center gap-1.5 text-xs">
+                      <Spinner className="h-3.5 w-3.5" />
+                      Saving…
+                    </span>
+                  ) : editable ? (
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -191,21 +279,6 @@ export function QuestionList({
           </Card>
         ))
       )}
-
-      {editable ? (
-        adding ? (
-          <Card>
-            <CardBody>
-              <QuestionForm quizId={quizId} onDone={() => setAdding(false)} onCancel={() => setAdding(false)} />
-            </CardBody>
-          </Card>
-        ) : (
-          <Button variant="secondary" onClick={() => setAdding(true)}>
-            <IconPlus />
-            Add question
-          </Button>
-        )
-      ) : null}
     </div>
   );
 }

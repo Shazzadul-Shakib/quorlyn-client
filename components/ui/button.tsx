@@ -14,11 +14,11 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:pointer-events-none disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-gradient-brand text-primary-fg hover:brightness-110 active:brightness-95 shadow-sm",
+  primary: "bg-primary text-primary-fg hover:bg-primary-hover active:bg-primary-active",
   secondary:
     "border border-border bg-surface text-fg hover:bg-surface-2 hover:border-border-strong",
   ghost: "text-fg-muted hover:bg-surface-2 hover:text-fg",
-  danger: "bg-danger text-primary-fg hover:bg-danger-hover shadow-sm",
+  danger: "bg-danger text-primary-fg hover:bg-danger-hover",
   soft: "bg-primary-soft text-primary border border-primary-border hover:bg-surface-3",
 };
 

@@ -29,6 +29,7 @@ export function ContentEditor({
   disabled,
   placeholder,
   compact = false,
+  fieldRef: externalRef,
 }: {
   id: string;
   label?: string;
@@ -40,6 +41,11 @@ export function ContentEditor({
   disabled?: boolean;
   placeholder?: string;
   compact?: boolean;
+  /** Lets a caller (e.g. the question form) focus this field programmatically —
+   * used to return focus to the prompt after it resets for the next question.
+   * A plain callback rather than `Ref<T>` so this never needs to write into
+   * an object a caller owns — it only ever calls a function the caller gave it. */
+  fieldRef?: (el: HTMLTextAreaElement | HTMLInputElement | null) => void;
 }) {
   const [formulaOpen, setFormulaOpen] = useState(false);
   const [latex, setLatex] = useState("");
@@ -47,6 +53,7 @@ export function ContentEditor({
   const fieldRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
   const setFieldRef = (el: HTMLTextAreaElement | HTMLInputElement | null) => {
     fieldRef.current = el;
+    externalRef?.(el);
   };
   const multiline = rows !== undefined;
   const hasMath = value.includes("$");

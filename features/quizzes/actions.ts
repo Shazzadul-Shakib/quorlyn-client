@@ -86,29 +86,62 @@ export async function updatePublishedSettingsAction(
   return { notice: "Saved." };
 }
 
-export async function publishQuizAction(quizId: string): Promise<void> {
-  await quizApi.publishQuiz(quizId);
+// These five all *return* `FormState` instead of throwing on failure —
+// Next.js only forwards a thrown Server Action's real message to the client
+// in dev; in production it's redacted to a generic one. Returning the error
+// (same pattern as the settings/create actions above) means a real,
+// expected rejection like "the availability window is too short" reaches
+// the user identically in both environments.
+
+export async function publishQuizAction(quizId: string): Promise<FormState> {
+  try {
+    await quizApi.publishQuiz(quizId);
+  } catch (error) {
+    return { error: errorMessage(error, "Could not publish this quiz") };
+  }
   revalidatePath(`/app/quizzes/${quizId}`);
+  return {};
 }
 
-export async function closeQuizAction(quizId: string): Promise<void> {
-  await quizApi.closeQuiz(quizId);
+export async function closeQuizAction(quizId: string): Promise<FormState> {
+  try {
+    await quizApi.closeQuiz(quizId);
+  } catch (error) {
+    return { error: errorMessage(error, "Could not close this quiz") };
+  }
   revalidatePath(`/app/quizzes/${quizId}`);
+  return {};
 }
 
-export async function archiveQuizAction(quizId: string): Promise<void> {
-  await quizApi.archiveQuiz(quizId);
+export async function archiveQuizAction(quizId: string): Promise<FormState> {
+  try {
+    await quizApi.archiveQuiz(quizId);
+  } catch (error) {
+    return { error: errorMessage(error, "Could not archive this quiz") };
+  }
   revalidatePath(`/app/quizzes/${quizId}`);
+  return {};
 }
 
-export async function duplicateQuizAction(quizId: string): Promise<void> {
-  const duplicate = await quizApi.duplicateQuiz(quizId);
+export async function duplicateQuizAction(quizId: string): Promise<FormState> {
+  let duplicate: Quiz;
+  try {
+    duplicate = await quizApi.duplicateQuiz(quizId);
+  } catch (error) {
+    return { error: errorMessage(error, "Could not duplicate this quiz") };
+  }
+  // `redirect()` throws internally to do its work, so it must stay outside
+  // the try/catch above — catching it there would swallow the navigation.
   revalidatePath("/app/quizzes");
   redirect(`/app/quizzes/${duplicate.id}`);
 }
 
-export async function deleteQuizAction(quizId: string): Promise<void> {
-  await quizApi.deleteQuiz(quizId);
+export async function deleteQuizAction(quizId: string): Promise<FormState> {
+  try {
+    await quizApi.deleteQuiz(quizId);
+  } catch (error) {
+    return { error: errorMessage(error, "Could not delete this quiz") };
+  }
   revalidatePath("/app/quizzes");
   redirect("/app/quizzes");
 }
@@ -154,7 +187,7 @@ export async function createLinkAction(
   return link;
 }
 
-export async function revokeLinkAction(quizId: string, linkId: string): Promise<void> {
-  await quizApi.revokeLink(quizId, linkId);
+export async function deleteLinkAction(quizId: string, linkId: string): Promise<void> {
+  await quizApi.deleteLink(quizId, linkId);
   revalidatePath(`/app/quizzes/${quizId}/links`);
 }
