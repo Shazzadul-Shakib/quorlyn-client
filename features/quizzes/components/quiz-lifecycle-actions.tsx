@@ -7,6 +7,7 @@ import {
   deleteQuizAction,
   duplicateQuizAction,
   publishQuizAction,
+  type FormState,
 } from "../actions";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-provider";
@@ -20,12 +21,19 @@ export function QuizLifecycleActions({ quiz }: { quiz: Quiz }) {
   const confirm = useConfirm();
   const toast = useToast();
 
-  async function run(label: string, confirmOptions: ConfirmOptions | null, action: () => Promise<void>) {
+  async function run(
+    label: string,
+    confirmOptions: ConfirmOptions | null,
+    action: () => Promise<FormState>,
+  ) {
     if (confirmOptions && !(await confirm(confirmOptions))) return;
     startTransition(async () => {
       try {
-        await action();
+        const result = await action();
+        if (result.error) toast.error(result.error);
       } catch (cause) {
+        // `redirect()` (duplicate/delete on success) works by throwing —
+        // let that specific throw through instead of treating it as a failure.
         if (cause instanceof Error && cause.message.includes("NEXT_REDIRECT")) throw cause;
         toast.error(errorMessage(cause, `Could not ${label.toLowerCase()} this quiz`));
       }

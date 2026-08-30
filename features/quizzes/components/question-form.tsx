@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { createQuestionAction, updateQuestionAction } from "../actions";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { updateQuestionAction } from "../actions";
 import type { QuestionInput, QuestionOptionInput } from "../api";
 import { ContentEditor } from "./content-editor";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
-import { IconTrash, IconPlus } from "@/components/ui/icons";
+import { IconTrash, IconPlus, IconCheck } from "@/components/ui/icons";
 import { errorMessage } from "@/lib/api/errors";
 import type { AnswerKeyQuestion, QuestionType } from "@/types/api";
 
@@ -49,18 +49,41 @@ export function QuestionForm({
   question,
   onDone,
   onCancel,
+  onAdd,
 }: {
   quizId: string;
   question?: AnswerKeyQuestion;
   onDone: () => void;
   onCancel?: () => void;
+  /** Creating a question is optimistic (see `QuestionList`) — this hands the
+   * validated input to the parent, which shows it in the list immediately
+   * and only reports back (via a toast) if the save turns out to fail. */
+  onAdd?: (input: QuestionInput) => void;
 }) {
+  const isEditing = Boolean(question);
   const [type, setType] = useState<QuestionType>(question?.type ?? "SINGLE_CHOICE");
   const [points, setPoints] = useState(question?.points ?? 1);
   const [prompt, setPrompt] = useState(question?.prompt ?? "");
   const [options, setOptions] = useState<OptionState[]>(() => initialOptions(question));
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
+  const promptRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+
+  // A fresh "add" form (or one just opened to edit) should be ready to type
+  // into immediately — one less click than clicking into the prompt field.
+  useEffect(() => {
+    promptRef.current?.focus();
+  }, []);
+
+  // The form resets to blank in place after a successful add rather than
+  // closing, so this transient confirmation is the only cue that the
+  // previous question actually saved.
+  useEffect(() => {
+    if (!justAdded) return;
+    const timer = setTimeout(() => setJustAdded(false), 2500);
+    return () => clearTimeout(timer);
+  }, [justAdded]);
 
   function changeType(next: QuestionType) {
     setType(next);
@@ -121,18 +144,40 @@ export function QuestionForm({
     };
 
     setError(null);
-    startTransition(async () => {
-      try {
-        if (question) {
+
+    if (question) {
+      startTransition(async () => {
+        try {
           await updateQuestionAction(quizId, question.id, input);
-        } else {
-          await createQuestionAction(quizId, input);
+          onDone();
+        } catch (cause) {
+          setError(errorMessage(cause, "Could not save this question"));
         }
-        onDone();
-      } catch (cause) {
-        setError(errorMessage(cause, "Could not save this question"));
-      }
-    });
+      });
+      return;
+    }
+
+    // Creating is optimistic: hand off to the parent (which shows it in the
+    // list right away and reports a failure via toast) and reset immediately
+    // rather than waiting on the network — that's the whole point.
+    onAdd?.(input);
+    // Stay open and reset to blank instead of collapsing — adding a
+    // whole quiz's worth of questions is the common case, and closing
+    // after every single one meant re-clicking "Add question" each time.
+    // Type is deliberately preserved: a run of same-type questions
+    // (common — a block of MCQs) shouldn't need reselecting each time.
+    setPoints(1);
+    setPrompt("");
+    setOptions(
+      type === "TRUE_FALSE"
+        ? [
+            { key: nextLocalId(), text: "True", isCorrect: true },
+            { key: nextLocalId(), text: "False", isCorrect: false },
+          ]
+        : blankOptions(),
+    );
+    promptRef.current?.focus();
+    setJustAdded(true);
   }
 
   return (
@@ -160,7 +205,17 @@ export function QuestionForm({
         </Field>
       </div>
 
-      <ContentEditor id="q-prompt" label="Prompt" value={prompt} onChange={setPrompt} rows={3} required />
+      <ContentEditor
+        id="q-prompt"
+        label="Prompt"
+        value={prompt}
+        onChange={setPrompt}
+        rows={3}
+        required
+        fieldRef={(el) => {
+          promptRef.current = el;
+        }}
+      />
 
       <div className="space-y-2">
         <p className="text-fg text-sm font-medium">
@@ -214,14 +269,20 @@ export function QuestionForm({
         ) : null}
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex items-center justify-end gap-2">
+        {justAdded ? (
+          <span className="text-success-fg mr-auto flex items-center gap-1 text-sm">
+            <IconCheck width={15} height={15} />
+            Added — write the next one, or press Done.
+          </span>
+        ) : null}
         {onCancel ? (
           <Button type="button" variant="secondary" onClick={onCancel} disabled={pending}>
-            Cancel
+            {isEditing ? "Cancel" : "Done"}
           </Button>
         ) : null}
         <Button type="button" onClick={submit} disabled={pending}>
-          {pending ? "Saving…" : question ? "Save question" : "Add question"}
+          {pending ? "Saving…" : isEditing ? "Save question" : "Add question"}
         </Button>
       </div>
     </div>

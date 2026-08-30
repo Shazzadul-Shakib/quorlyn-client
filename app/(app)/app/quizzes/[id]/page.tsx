@@ -4,12 +4,11 @@ import { notFound } from "next/navigation";
 import { getMe } from "@/features/auth/me";
 import { requireOrgPermission } from "@/features/shell/guard";
 import { getQuiz, getQuestions } from "@/features/quizzes/api";
-import { QuizSettingsForm } from "@/features/quizzes/components/quiz-settings-form";
+import { QuizSettingsModal } from "@/features/quizzes/components/quiz-settings-modal";
 import { QuizLifecycleActions } from "@/features/quizzes/components/quiz-lifecycle-actions";
 import { QuestionList, type QuestionListItem } from "@/features/quizzes/components/question-list";
 import { RenderedContent } from "@/components/math/rendered-content";
 import { PageHeader } from "@/components/ui/page";
-import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { QuizStatusBadge } from "@/components/quiz-status-badge";
 import { ButtonLink } from "@/components/ui/button";
 import { IconArrowLeft } from "@/components/ui/icons";
@@ -62,6 +61,7 @@ export default async function QuizEditorPage(props: PageProps<"/app/quizzes/[id]
         }
         actions={
           <div className="flex items-center gap-2">
+            <QuizSettingsModal quiz={quiz} />
             <ButtonLink href={`/app/quizzes/${quiz.id}/results`} variant="secondary" size="sm">
               Results
             </ButtonLink>
@@ -73,20 +73,13 @@ export default async function QuizEditorPage(props: PageProps<"/app/quizzes/[id]
         }
       />
 
-      <Card>
-        <CardHeader title="Settings" />
-        <CardBody>
-          <QuizSettingsForm quiz={quiz} />
-        </CardBody>
-      </Card>
-
       <div className="space-y-2.5">
         <div>
           <h2 className="text-fg text-sm font-semibold">Questions</h2>
           {quiz.status === "DRAFT" ? (
             <p className="text-fg-subtle text-xs">
               Write the prompt, insert a formula with the Formula button when you need one, then
-              add options and mark the correct answer.
+              add options and mark the correct answer. Saving one keeps this form open for the next.
             </p>
           ) : null}
         </div>

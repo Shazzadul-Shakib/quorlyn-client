@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { createLinkAction, revokeLinkAction } from "../actions";
+import { createLinkAction, deleteLinkAction } from "../actions";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -47,11 +47,17 @@ function writeCachedUrls(quizId: string, urls: Record<string, string>) {
 export function LinksManager({ quizId, links: initialLinks }: { quizId: string; links: QuizLink[] }) {
   const [links, setLinks] = useState(initialLinks);
   const [label, setLabel] = useState("");
-  const [pending, startTransition] = useTransition();
+  // Separate from `deleting` deliberately: sharing one `pending` flag across
+  // both actions meant deleting a link also made the "Create link" button
+  // read "Creating…" and go disabled, even though nothing was being created.
+  const [creating, startCreateTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleting, startDeleteTransition] = useTransition();
   const [justCreated, setJustCreated] = useState<QuizLink | null>(null);
   const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({});
   const confirm = useConfirm();
   const toast = useToast();
+  const activeLink = links.find((l) => l.acceptingAttempts);
 
   // Deferred to after mount, like the theme override: the server has no
   // access to localStorage, so this can only be read client-side.
@@ -62,7 +68,7 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
   /* eslint-enable react-hooks/set-state-in-effect */
 
   function create() {
-    startTransition(async () => {
+    startCreateTransition(async () => {
       try {
         const link = await createLinkAction(quizId, label.trim() ? { label: label.trim() } : {});
         setLinks((prev) => [link, ...prev]);
@@ -79,20 +85,19 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
     });
   }
 
-  async function revoke(linkId: string) {
+  async function remove(linkId: string) {
     const ok = await confirm({
-      title: "Revoke this link?",
-      description: "It will stop working immediately.",
-      confirmLabel: "Revoke",
+      title: "Delete this link?",
+      description: "This cannot be undone — it will stop working immediately.",
+      confirmLabel: "Delete",
       tone: "danger",
     });
     if (!ok) return;
-    startTransition(async () => {
+    setDeletingId(linkId);
+    startDeleteTransition(async () => {
       try {
-        await revokeLinkAction(quizId, linkId);
-        setLinks((prev) =>
-          prev.map((l) => (l.id === linkId ? { ...l, revokedAt: new Date().toISOString() } : l)),
-        );
+        await deleteLinkAction(quizId, linkId);
+        setLinks((prev) => prev.filter((l) => l.id !== linkId));
         if (linkId in cachedUrls) {
           const next = { ...cachedUrls };
           delete next[linkId];
@@ -100,7 +105,9 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
           writeCachedUrls(quizId, next);
         }
       } catch (cause) {
-        toast.error(errorMessage(cause, "Could not revoke this link"));
+        toast.error(errorMessage(cause, "Could not delete this link"));
+      } finally {
+        setDeletingId(null);
       }
     });
   }
@@ -124,15 +131,27 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
       ) : null}
 
       <Card>
-        <CardHeader title="Create a link" />
+        <CardHeader
+          title="Create a link"
+          description={
+            activeLink
+              ? "This quiz already has an active link — delete it or wait for it to expire before creating another."
+              : "One active link at a time, so it's always clear which one is live."
+          }
+        />
         <CardBody className="flex flex-wrap items-end gap-3">
           <div className="min-w-48 flex-1">
             <Field label="Label" htmlFor="link-label" hint="Optional, to tell links apart.">
-              <Input id="link-label" value={label} onChange={(event) => setLabel(event.target.value)} />
+              <Input
+                id="link-label"
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                disabled={creating || Boolean(activeLink)}
+              />
             </Field>
           </div>
-          <Button onClick={create} disabled={pending}>
-            {pending ? "Creating…" : "Create link"}
+          <Button onClick={create} disabled={creating || Boolean(activeLink)}>
+            {creating ? "Creating…" : "Create link"}
           </Button>
         </CardBody>
       </Card>
@@ -161,18 +180,23 @@ export function LinksManager({ quizId, links: initialLinks }: { quizId: string; 
                   </TD>
                   <TD>{link.expiresAt ? formatDate(link.expiresAt) : "Never"}</TD>
                   <TD>
-                    <Badge tone={link.revokedAt ? "danger" : "success"}>
-                      {link.revokedAt ? "Revoked" : "Active"}
+                    <Badge tone={link.acceptingAttempts ? "success" : "neutral"}>
+                      {link.acceptingAttempts ? "Active" : "Expired"}
                     </Badge>
                   </TD>
                   <TD align="right">
-                    {!link.revokedAt ? (
+                    {link.acceptingAttempts ? (
                       <div className="flex justify-end gap-2">
                         {cachedUrls[link.id] ? (
                           <CopyButton value={cachedUrls[link.id]} label="Copy" variant="secondary" />
                         ) : null}
-                        <Button variant="danger" size="sm" disabled={pending} onClick={() => revoke(link.id)}>
-                          Revoke
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          disabled={deleting && deletingId === link.id}
+                          onClick={() => remove(link.id)}
+                        >
+                          {deleting && deletingId === link.id ? "Deleting…" : "Delete"}
                         </Button>
                       </div>
                     ) : null}

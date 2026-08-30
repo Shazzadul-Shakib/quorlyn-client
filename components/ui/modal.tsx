@@ -2,17 +2,26 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { IconX } from "./icons";
+import { cn } from "@/lib/utils";
+
+const SIZES = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-2xl",
+} as const;
 
 export function Modal({
   title,
   description,
   onClose,
   children,
+  size = "md",
 }: {
   title: string;
   description?: string;
   onClose: () => void;
   children: ReactNode;
+  size?: keyof typeof SIZES;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -66,9 +75,12 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby={description ? "modal-description" : undefined}
-        className="border-border bg-surface relative w-full max-w-md space-y-4 rounded-card border p-5 shadow-lg"
+        className={cn(
+          "border-border bg-surface relative flex max-h-[calc(100vh-2rem)] w-full flex-col rounded-card border shadow-lg",
+          SIZES[size],
+        )}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 px-5 pt-5">
           <div className="min-w-0 space-y-1">
             <h2 id="modal-title" className="text-fg text-base font-semibold">
               {title}
@@ -89,7 +101,7 @@ export function Modal({
             <IconX width={16} height={16} />
           </button>
         </div>
-        {children}
+        <div className="space-y-4 overflow-y-auto px-5 pt-4 pb-5">{children}</div>
       </div>
     </div>
   );

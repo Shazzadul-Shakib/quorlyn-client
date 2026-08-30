@@ -232,8 +232,10 @@ export interface QuizLink {
   expiresAt: string | null;
   maxUses: number | null;
   usedCount: number;
-  revokedAt: string | null;
   createdAt: string;
+  /** Server-computed: folds in the quiz's own status/opensAt/closesAt, not
+   * just this link's own expiresAt/maxUses — the one true "is this live." */
+  acceptingAttempts: boolean;
   /** Returned once, at creation. Never retrievable again. */
   token: string | null;
   url: string | null;
