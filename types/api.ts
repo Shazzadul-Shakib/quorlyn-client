@@ -332,6 +332,13 @@ export interface AttemptDetail {
   events: ProctorEvent[];
 }
 
+/** A student's own attempt, with the answer key — only once the quiz has closed. */
+export interface AttemptReview {
+  attempt: Attempt;
+  questions: AnswerKeyQuestion[];
+  answers: GradedAnswer[];
+}
+
 /* ------------------------------------------------------------- dashboards */
 
 export interface QuizOverview {
@@ -409,6 +416,11 @@ export interface StudentProgressEntry {
   bestScore: number | null;
   maxScore: number;
   lastAttemptAt: string | null;
+  /** For deciding whether the answer key is reviewable yet. */
+  quizStatus: QuizStatus;
+  closesAt: string | null;
+  /** The latest submitted attempt's id, to link a review to — null if none submitted. */
+  lastSubmittedAttemptId: string | null;
 }
 
 export interface StudentDashboard {
